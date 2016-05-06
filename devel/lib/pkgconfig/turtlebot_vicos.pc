@@ -1,8 +1,0 @@
-prefix=/home/team_kappa/ROS/devel
-
-Name: turtlebot_vicos
-Description: Description of turtlebot_vicos
-Version: 0.1.0
-Cflags: 
-Libs: -L/home/team_kappa/ROS/devel/lib 
-Requires: 

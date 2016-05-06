@@ -1,8 +1,0 @@
-prefix=/home/team_kappa/ROS/devel
-
-Name: send_goals
-Description: Description of send_goals
-Version: 0.0.0
-Cflags: 
-Libs: -L/home/team_kappa/ROS/devel/lib 
-Requires: 
