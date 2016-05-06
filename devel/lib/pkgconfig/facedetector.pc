@@ -1,0 +1,8 @@
+prefix=/home/team_kappa/ROS/devel
+
+Name: facedetector
+Description: Description of facedetector
+Version: 0.1.0
+Cflags: -I/home/team_kappa/ROS/devel/include
+Libs: -L/home/team_kappa/ROS/devel/lib 
+Requires: message_runtime

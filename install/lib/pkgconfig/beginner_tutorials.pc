@@ -1,0 +1,8 @@
+prefix=/home/team_kappa/ROS/install
+
+Name: beginner_tutorials
+Description: Description of beginner_tutorials
+Version: 0.0.0
+Cflags: -I/home/team_kappa/ROS/install/include
+Libs: -L/home/team_kappa/ROS/install/lib 
+Requires: 
