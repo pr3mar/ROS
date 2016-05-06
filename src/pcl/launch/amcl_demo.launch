@@ -23,18 +23,15 @@
     <arg name="initial_pose_a" value="$(arg initial_pose_a)"/>
   </include>
 
-  <include file="$(find facedetector)/launch/facedetector.launch">
+  <include file="$(find opencv_detector)/launch/facedetector.launch">
 	<arg name="image_topic" value="/camera/rgb/image_color" />
   </include>
-  
-  <include file="$(find facedetector)/launch/facevisualizer.launch" />
-
 
   <include file="$(find turtlebot_navigation)/launch/includes/move_base.launch.xml">
     <arg name="custom_param_file" value="$(arg custom_param_file)"/>
   </include>
-  <include file="$(find facedetector)/launch/facemapper.launch" name="listener">
-	<arg name="camera_topic" value="/camera/rgb/camera_info" />
+  <include file="$(find opencv_detector)/launch/facedetector_mapper.launch" name="listener">
+	<!-- <arg name="camera_topic" value="/camera/rgb/camera_info" /> -->
   </include> 
 </launch>
 
