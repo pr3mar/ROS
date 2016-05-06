@@ -1,0 +1,54 @@
+# this is executed on your computer
+# the gui for exploring data from the bot
+export ROS_MASTER_URI=http://192.168.1.103:11311
+rosrun rqt_gui rqt_gui
+
+
+# connect to the computer through ssh
+ssh team_kappa@192.168.1.103 2d147066
+# launch the teleop 
+roslaunch turtlebot_teleop keyboard_teleop.launch
+
+
+# execute this line directly on the computer
+# launches the configuration and connection to the bot
+roslaunch turtlebot_bringup minimal.launch
+
+# this records a certain topic /mobile_base/commands/velocity in this case
+rostopic echo /mobile_base/commands/velocity > log_keys.log
+
+# this will publish on a certain topic with rate 30hz from the file log_keys3.log
+# geometry_msgs/Twist is the type of data we are sending
+rostopic pub /mobile_base/commands/velocity geometry_msgs/Twist -r 30 -f log_keys3.log
+
+
+#copy files
+scp -r team_kappa@192.168.1.103:/home/team_kappa/ROS /local/path/change/it
+
+# kinnect:
+roslaunch turtlebot_bringup 3dsensor.launch
+roslaunch turtlebot_vicos dummy.launch
+
+# in RViz -> add 
+# fixed frame -> base_link
+1. roslaunch turtlebot_vicos dummy.launch
+2. roslaunch turtlebot_bringup 3dsensor.launch
+3. rosrun rviz rviz
+
+rosrun pcl pcl_ex input:=/camera/depth_registered/points #(!!!)
+rosrun pcl pcl_ex2 input:=/camera/depth_registered/points
+
+
+#map building:
+roslaunch turtlebot_navigation gmapping_demo.launch
+roslaunch turtlebot_rviz_launchers view_navigation.launch
+rosrun map_server map_saver -f /my/path/
+
+roslaunch pcl amcl_demo.launch map_file:=/path/to/file # at the moment it is in the pcl package, separate it in a new one!
+roslaunch turtlebot_rviz_launchers view_navigation.launch --screen
+# rosrun map_server map_server map_file:=/path/to/file
+
+
+#check these out!!!
+/move_base_simple/goal
+/move_base/status 
