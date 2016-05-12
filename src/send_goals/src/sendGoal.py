@@ -106,7 +106,7 @@ class SendGoal():
         self.reset = False
         self.det = {}
         self.detected = 0
-        rospy.Subscriber('facemapper/markers', MarkerArray, self.detection_thresh)
+        rospy.Subscriber('facedetector/markers', MarkerArray, self.detection_thresh)
         rospy.Subscriber('move_base/status', GoalStatusArray, self.callback)
         rospy.spin()
 
