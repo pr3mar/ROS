@@ -61,20 +61,20 @@ class DetectionMapper():
         self.marker_id_counter += 1
 
     def flush(self):
-        if not markers.markers or len(markers.markers) == 0:
+        if not self.markers.markers or len(self.markers.markers) == 0:
             self.markers = MarkerArray()
             return
-        self.markers_pub.publish(markers)
-        self.markers = MarkerArray()
+        self.markers_pub.publish(self.markers)
 
     def __init__(self):
+        self.markers = MarkerArray()
         self.marker_id_counter = 0
         self.region_scope = rospy.get_param('~region', 3)
         self.buffer_size = rospy.get_param('~camera_buffer_size', 50)
         rospy.wait_for_service('localizer/localize')
 
         self.camera_infos = collections.deque(maxlen = self.buffer_size)
-        self.detections_sub = message_filters.Subscriber('detections', Detection, self.detections_callback)
+        self.detections_sub = message_filters.Subscriber('detections', Detection, self.detection_callback)
         self.camera_sub = message_filters.Subscriber('camera_info', CameraInfo, self.camera_callback)
 
         self.localize = rospy.ServiceProxy('localizer/localize', Localize)
