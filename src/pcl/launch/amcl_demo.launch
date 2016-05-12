@@ -23,9 +23,9 @@
     <arg name="initial_pose_a" value="$(arg initial_pose_a)"/>
   </include>
 
-  <include file="$(find opencv_detector)/launch/facedetector.launch">
+  <!-- <include file="$(find opencv_detector)/launch/facedetector.launch">
 	<arg name="image_topic" value="/camera/rgb/image_color" />
-  </include>
+  </include> -->
 
   <include file="$(find turtlebot_navigation)/launch/includes/move_base.launch.xml">
     <arg name="custom_param_file" value="$(arg custom_param_file)"/>
