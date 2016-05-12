@@ -10,16 +10,16 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
-#include <ferns_ros/Detection.h>
-#include <ferns_ros/DetectedPoint.h>
-#include <ferns_ros/ModelStatus.h>
+#include <ferns_detector/Detection.h>
+#include <ferns_detector/DetectedPoint.h>
+#include <ferns_detector/ModelStatus.h>
 #include "ferns/mcv.h"
 #include "ferns/planar_pattern_detector_builder.h"
 #include "ferns/template_matching_based_tracker.h"
 
 using namespace cv;
 using namespace std;
-using namespace ferns_ros;
+using namespace ferns_detector;
 namespace enc = sensor_msgs::image_encodings;
 
 const int max_filename = 1000;
@@ -438,7 +438,7 @@ void statusReceiver(const ModelStatus& newStatus) {
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "ferns_ros");
+    ros::init(argc, argv, "ferns_detector");
 
     string models_path;
 

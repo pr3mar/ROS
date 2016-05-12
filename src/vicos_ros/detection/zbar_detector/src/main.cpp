@@ -10,7 +10,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <sensor_msgs/image_encodings.h>
 #include <zbar.h>
-#include "zbar_ros/Marker.h"
+#include "zbar_detector/Marker.h"
 
 using namespace std;
 using namespace zbar;
@@ -54,7 +54,7 @@ void imageReceiver(const sensor_msgs::ImageConstPtr &image) {
             ++symbol) {
     std::stringstream ss;
   	//Publish msg on zbar topic 
-	  zbar_ros::Marker msg;
+	  zbar_detector::Marker msg;
 	  ss << symbol->get_data();
     msg.header.seq = message_sequence++;
     msg.header.stamp = ros::Time::now();
@@ -107,7 +107,7 @@ int main(int argc, char **argv)
   
   scanner.set_config(ZBAR_NONE, ZBAR_CFG_ENABLE, 1); 
 
-  code = n.advertise<zbar_ros::Marker>("markers", 1000);
+  code = n.advertise<zbar_detector::Marker>("markers", 1000);
   ros::Subscriber sub = n.subscribe(IMAGE_TOPIC, 10, imageReceiver);
 
   ros::spin();
