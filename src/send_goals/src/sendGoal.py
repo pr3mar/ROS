@@ -55,6 +55,7 @@ class  SendGoal():
 		    sys.exit(0)
 	    if len(data.status_list) == 0:
 		    self.sendGoal()
+		print data
 	    stat = data.status_list[len(data.status_list) - 1].status
 	    #print self.nextID, stat
 	    if stat == 8: 
