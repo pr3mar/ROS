@@ -11,7 +11,6 @@ from visualization_msgs.msg import Marker, MarkerArray
 
 class SendGoal():
     def detection_thresh(self, points):
-    	print points
         for newPoint in points.markers:
             # newPoint = points[n]
             position = newPoint.pose.position
@@ -21,8 +20,7 @@ class SendGoal():
             mind = 0.5
             min_point = None
             if zp > 0.40:
-                print
-                xp, yp, zp
+                print xp, yp, zp
                 continue
             for key in self.det:
                 (x, y, z) = key.split(';')
