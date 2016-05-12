@@ -11,6 +11,7 @@ from visualization_msgs.msg import Marker, MarkerArray
 
 class SendGoal():
     def detection_thresh(self, points):
+    	print points
         for newPoint in points.markers:
             # newPoint = points[n]
             position = newPoint.pose.position
@@ -59,7 +60,7 @@ class SendGoal():
         if len(data.status_list) == 0:
             self.sendGoal()
             return
-        print len(data.status_list)
+        # print len(data.status_list)
         stat = data.status_list[len(data.status_list) - 1].status
         # print self.nextID, stat
         if stat == 8:

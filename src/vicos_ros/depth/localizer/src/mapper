@@ -81,7 +81,7 @@ class DetectionMapper():
         
 
         self.localize = rospy.ServiceProxy('localizer/localize', Localize)
-        self.markers_pub = rospy.Publisher('markers', MarkerArray)
+        self.markers_pub = rospy.Publisher('mapper', MarkerArray)
         self.markers = MarkerArray()
    
 if __name__ == '__main__':
