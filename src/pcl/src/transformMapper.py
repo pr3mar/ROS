@@ -4,12 +4,6 @@ import roslib
 roslib.load_manifest('pcl')
 import rospy
 import sys, select, termios, tty, tf
-from std_msgs.msg import String, Bool, ColorRGBA
-import sensor_msgs.msg
-import message_filters
-from facedetector.msg import Detection
-from localizer.srv import Localize
-from sensor_msgs.msg import CameraInfo
 from visualization_msgs.msg import Marker, MarkerArray
 from image_geometry import PinholeCameraModel
 from geometry_msgs.msg import Point, Vector3, PoseStamped
