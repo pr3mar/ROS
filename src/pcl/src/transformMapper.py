@@ -23,21 +23,21 @@ class MarkerTransformer():
         for i in xrange(0, n):
             tmp = markers[i]
             tmpPose = tmp.pose
-        try:
-            self.listener.waitForTransform(tmp.header.frame_id, '/map', tmp.header.stamp, rospy.Duration(4.5))
-            tmpPose = self.listener.transformPose('/map', tmpPose)
-        except tf.LookupException:
-            print
-            "lookup"
-            continue
-        except tf.ConnectivityException:
-            print
-            "conn"
-            continue
-        except tf.ExtrapolationException:
-            print
-            "extrapolation"
-            continue
+            try:
+                self.listener.waitForTransform(tmp.header.frame_id, '/map', tmp.header.stamp, rospy.Duration(4.5))
+                tmpPose = self.listener.transformPose('/map', tmpPose)
+            except tf.LookupException:
+                print
+                "lookup"
+                continue
+            except tf.ConnectivityException:
+                print
+                "conn"
+                continue
+            except tf.ExtrapolationException:
+                print
+                "extrapolation"
+                continue
         tmp.pose = tmpPose
         markers[i] = tmp
 
