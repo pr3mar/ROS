@@ -1,0 +1,13 @@
+map=$1
+if [ -z "$1" ]
+  then
+    map=/home/team_kappa/map1.yaml
+fi
+echo $map
+
+roslaunch turtlebot_bringup minimal.launch &
+roslaunch pcl amcl_demo.launch map_file:=$map &
+roslaunch turtlebot_rviz_launchers view_navigation.launch --screen &
+roslaunch sound_play soundplay_node.launch &
+
+rosrun sound_play say.py "hello team_kappa"

@@ -1,6 +1,6 @@
 # this is executed on your computer
 # the gui for exploring data from the bot
-export ROS_MASTER_URI=http://192.168.1.103:11311
+export ROS_MASTER_URI=http://192.168.1.104:11311
 rosrun rqt_gui rqt_gui
 
 
@@ -52,3 +52,6 @@ roslaunch turtlebot_rviz_launchers view_navigation.launch --screen
 #check these out!!!
 /move_base_simple/goal
 /move_base/status 
+
+
+# NLP -> levenstein distance ... !!!!
