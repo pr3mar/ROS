@@ -47,7 +47,7 @@ def __init__(self):
 # Main function.
 if __name__ == '__main__':
 
-    rospy.init_node('facemapper')
+    rospy.init_node('facemapper_transformer')
     try:
         fd = MarkerTransformer()
         rospy.spin()
