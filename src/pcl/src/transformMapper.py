@@ -32,9 +32,9 @@ class MarkerTransformer():
                 print
                 "extrapolation"
                 continue
-        tmp.pose = tmpPose
-        markers[i] = tmp
-    self.markers_pub.publish(markers)
+            tmp.pose = tmpPose
+            markers[i] = tmp
+        self.markers_pub.publish(markers)
 
 
 def __init__(self):
