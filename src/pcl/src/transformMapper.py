@@ -34,7 +34,6 @@ class MarkerTransformer():
                 continue
         tmp.pose = tmpPose
         markers[i] = tmp
-
     self.markers_pub.publish(markers)
 
 
