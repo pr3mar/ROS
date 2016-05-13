@@ -49,7 +49,7 @@ if __name__ == '__main__':
 
     rospy.init_node('facemapper')
     try:
-        fd = FaceMapper()
+        fd = MarkerTransformer()
         rospy.spin()
     except rospy.ROSInterruptException:
         pass
