@@ -13,35 +13,39 @@ import numpy
 # Node for face detection.
 class MarkerTransformer():
     def faces_callback(self, markers):
-        n = len(markers)
+        n = len(markers.markers)
+        pub = MarkerArray()
         for i in xrange(0, n):
-            tmp = markers[i]
-            tmpPose = tmp.pose
+            #print "yay"
+            tmp = markers.markers[i]
+            #print tmp
+            tmpPose = PoseStamped()
+            tmpPose.header = tmp.header
+            tmpPose.pose = tmp.pose
             try:
                 self.listener.waitForTransform(tmp.header.frame_id, '/map', tmp.header.stamp, rospy.Duration(4.5))
-                tmpPose = self.listener.transformPose('/map', tmpPose)
+                ret = self.listener.transformPose('/map', tmpPose)
             except tf.LookupException:
-                print
-                "lookup"
+                print "lookup"
                 continue
             except tf.ConnectivityException:
-                print
-                "conn"
+                print "conn"
                 continue
             except tf.ExtrapolationException:
-                print
-                "extrapolation"
+                print "extrapolation"
                 continue
-            tmp.pose = tmpPose
-            markers[i] = tmp
-        self.markers_pub.publish(markers)
+            tmp.pose = ret.pose
+            tmp.header = ret.header
+            pub.markers.append(tmp)
+        self.markers_pub.publish(pub)
 
 
-def __init__(self):
-    self.joined_sub = message_filters.TimeSynchronizer([self.faces_sub, self.camera_sub], 30)
-    self.joined_sub.registerCallback(self.faces_callback)
-    self.markers_pub = rospy.Publisher('/pcl/transformedMarkers', MarkerArray)
-    self.listener = tf.TransformListener()
+    def __init__(self):
+        #self.joined_sub = message_filters.TimeSynchronizer([self.faces_sub, self.camera_sub], 30)
+        #self.joined_sub.registerCallback(self.faces_callback)
+        self.subs_marker = rospy.Subscriber("/facedetector/markers", MarkerArray, self.faces_callback)
+        self.markers_pub = rospy.Publisher('/pcl/transformedMarkers', MarkerArray, queue_size=10)
+        self.listener = tf.TransformListener()
 
 
 # Main function.
