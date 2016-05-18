@@ -29,7 +29,7 @@ scp -r team_kappa@192.168.1.103:/home/team_kappa/ROS /local/path/change/it
 roslaunch turtlebot_bringup 3dsensor.launch
 roslaunch turtlebot_vicos dummy.launch
 
-# in RViz -> add 
+# in RViz -> add
 # fixed frame -> base_link
 1. roslaunch turtlebot_vicos dummy.launch
 2. roslaunch turtlebot_bringup 3dsensor.launch
