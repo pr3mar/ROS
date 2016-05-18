@@ -5,10 +5,11 @@ project(recognizer)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  detection_msgs
-  opencv_detector
+  cv_bridge
+  opencv2
   roscpp
   rospy
+  sensor_msgs
   std_msgs
 )
 
@@ -69,7 +70,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate added messages and services with any dependencies listed here
 # generate_messages(
 #   DEPENDENCIES
-#   detection_msgs#   std_msgs
+#   sensor_msgs#   std_msgs
 # )
 
 ################################################
@@ -104,7 +105,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES recognizer
-#  CATKIN_DEPENDS detection_msgs opencv_detector roscpp rospy std_msgs
+#  CATKIN_DEPENDS cv_bridge opencv2 roscpp rospy sensor_msgs std_msgs
 #  DEPENDS system_lib
 )
 

@@ -4,7 +4,7 @@ roslib.load_manifest('recognizer')
 
 #import libraries
 import rospy
-import sys, select, termios, tty, tf, numpy, Image
+import sys, select, termios, tty, tf, numpy as np, Image, getpass, cv_bridge as cv, opencv2
 # import messages
 from visualization_msgs.msg import Marker, MarkerArray
 from image_geometry import PinholeCameraModel
@@ -13,13 +13,20 @@ from detection_msgs.msg import Detection
 
 class BuildTestSet():
 	def faceCallback(self, detection):
+		print "success!!!"
 		if(self.objectCounter % 10 == 0):
-			print "save img"
 			self.objectCounter = 0
+			cv_img = cv.imgmsg_to_cv2(detection.image, "bgr8")
+			#im = Image.fromarray()
+			#im.save('~/home/' + getpass.getuser() + '/ROS/data/faces/' + self.faceCounter + '.jpg')
+			self.faceCounter += 1
+		else:
+			self.objectCounter += 1
 
 
 	def __init__(self):
 		self.objectCounter = 0
+		self.faceCounter = 1
 		self.writePath = "~/ROS/data/faces"
 		self.faceListener = rospy.Subscriber('/facedetector/faces', Detection, self.faceCallback)
 
