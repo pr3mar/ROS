@@ -3,7 +3,9 @@ import rospy
 from std_msgs.msg import String
 
 def callback(data):
-    rospy.loginfo(rospy.get_caller_id() + "You said: %s", data.data)
+    print "You said: "+data.data
+
+    #now do sth with that data!
     
 def commander():
 

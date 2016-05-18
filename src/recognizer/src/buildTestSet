@@ -4,7 +4,7 @@ roslib.load_manifest('recognizer')
 
 #import libraries
 import rospy
-import sys, select, termios, tty, tf, numpy as np, Image, getpass, cv_bridge as cv, opencv2
+import sys, select, termios, tty, tf, numpy as np, Image, getpass, cv_bridge as bridge, cv2
 # import messages
 from visualization_msgs.msg import Marker, MarkerArray
 from image_geometry import PinholeCameraModel
@@ -16,7 +16,7 @@ class BuildTestSet():
 		print "success!!!"
 		if(self.objectCounter % 10 == 0):
 			self.objectCounter = 0
-			cv_img = cv.imgmsg_to_cv2(detection.image, "bgr8")
+			cv_img = bridge.imgmsg_to_cv2(detection.image, "bgr8")
 			#im = Image.fromarray()
 			#im.save('~/home/' + getpass.getuser() + '/ROS/data/faces/' + self.faceCounter + '.jpg')
 			self.faceCounter += 1
