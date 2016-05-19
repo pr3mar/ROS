@@ -8,6 +8,6 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_python_setup()
 
 catkin_package(CATKIN_DEPENDS message_runtime)
-add_message_files(FILES Detection.msg)
+
 install(PROGRAMS src/detector DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
