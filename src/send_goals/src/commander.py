@@ -6,6 +6,7 @@ def callback(data):
     print "You said: "+data.data
 
     #now do sth with that data!
+    # pub = rospy.Publisher('/robotsound sound_play/SoundRequest', String, queue_size=10)
     
 def commander():
 
