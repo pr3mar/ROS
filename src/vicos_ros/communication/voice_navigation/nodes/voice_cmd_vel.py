@@ -32,8 +32,10 @@ class voice_cmd_vel:
         
     def speechCb(self, msg):
         rospy.loginfo(msg.data)
+        rospy.loginfo("In program.")
 
         if not msg.data.startswith(self.prefix):
+            print "no prefix"
             return
 
         command = msg.data[len(self.prefix):].strip()
@@ -80,6 +82,8 @@ class voice_cmd_vel:
 if __name__=="__main__":
     rospy.init_node('voice_cmd_vel')
     prefix = rospy.get_param('~prefix', '')
+    print prefix
+    rospy.loginfo("Starting.")
 
     try:
         voice_cmd_vel(prefix)
