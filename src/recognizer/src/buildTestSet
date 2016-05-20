@@ -13,25 +13,40 @@ from detection_msgs.msg import Detection
 
 class BuildTestSet():
 	def faceCallback(self, detection):
+		if(self.faceCounter % 10 == 0):
+			print "writing a face!"
+			self.faceCounter = 1
+			cv_img = self.bridge.imgmsg_to_cv2(detection.image, "bgr8")
+			#cv2.imshow('face',cv_img) # uncomment to show the current image
+			#cv2.waitKey(1) 
+			cv2.imwrite('/home/%s/ROS/data/faces/%d.jpg' % (getpass.getuser(), self.faceFile), cv_img)
+			self.faceFile += 1
+		else:
+			self.faceCounter += 1
+
+	def signCallback(self, detection):
 		print "detection"
 		if(self.objectCounter % 10 == 0):
 			print "going to write!"
 			self.objectCounter = 1
 			cv_img = self.bridge.imgmsg_to_cv2(detection.image, "bgr8")
-			#cv2.imshow('face',cv_img)
-			#cv2.waitKey(1) # uncomment to show the current image
-			cv2.imwrite('/home/%s/ROS/data/faces/%2d.jpg' % (getpass.getuser(), self.faceCounter), cv_img)
-			self.faceCounter += 1
+			#cv2.imshow('face',cv_img) # uncomment to show the current image
+			#cv2.waitKey(1) 
+			cv2.imwrite('/home/%s/ROS/data/signs/%d.jpg' % (getpass.getuser(), self.objFile), cv_img)
+			self.objFile += 1
 		else:
 			self.objectCounter += 1
 
 
 	def __init__(self):
 		self.objectCounter = 0
-		self.faceCounter = 1
+		self.faceCounter = 0
+		self.faceFile = 1
+		self.objFile = 1
 		self.writePath = "~/ROS/data/faces"
 		self.bridge = bridge.CvBridge()
 		self.faceListener = rospy.Subscriber('/facedetector/faces', Detection, self.faceCallback)
+		self.signListener = rospy.Subscriber('/detector/traffic_signs', Detection, self.signCallback)
 
 
 if __name__ == '__main__':
