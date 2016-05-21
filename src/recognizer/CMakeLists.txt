@@ -14,9 +14,10 @@ find_package(
   std_msgs
 )
 LINK_LIBRARIES(${OpenCV_LIBS})
-
+MESSAGE("LIBS: " ${OpenCV_LIBS})
+SET(OpenCV_INCLUDE_DIR "/usr/include/opencv2")
 INCLUDE_DIRECTORIES(AFTER ${CMAKE_CURRENT_BINARY_DIR} ${OpenCV_INCLUDE_DIR})
-
+MESSAGE("INCLUDE: " ${OpenCV_INCLUDE_DIR})
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 

@@ -3,10 +3,10 @@
 #include <vector>
 #include <string>
 #include <fstream>
-#include <opencv2/objdetect.hpp>
-#include <opencv2/face.hpp>
-#include <opencv2/highgui.hpp>
-#include <opencv2/imgproc.hpp>
+#include <opencv2/objdetect/objdetect.hpp>
+#include <opencv2/contrib/contrib.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 
 #include "utilities.h"
 
