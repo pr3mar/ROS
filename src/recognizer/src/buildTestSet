@@ -13,6 +13,7 @@ from detection_msgs.msg import Detection
 
 class BuildTestSet():
 	def faceCallback(self, detection):
+		print "detected a face!"
 		if(self.faceCounter % 10 == 0):
 			print "writing a face!"
 			self.faceCounter = 1

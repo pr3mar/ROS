@@ -1,3 +1,7 @@
+#include <ros/ros.h>
+#include <sensor_msgs/image_encodings.h>
+#include <cv_bridge/cv_bridge.h>
+#include <detection_msgs/Detection.h>
 #include <cstdio>
 #include <iostream>
 #include <vector>
@@ -11,6 +15,7 @@
 
 using namespace std;
 using namespace cv;
+using namespace ros;
 //using namespace cv::face;
 
 #include "utilities.h"
@@ -18,44 +23,74 @@ using namespace cv;
 #define WINDOW_NAME "Face recognition"
 
 Size reference_size(50, 50);
+Subscriber sub;
+Ptr<FaceRecognizer> recognizer;
+vector<string> classes;
 
 void load_faces(string dataset, vector<string> classes, vector<Mat>& faces, vector<int>& ids) {
   int class_id = 0;
-  cout << "Loading faces ..." << endl;
+  ROS_INFO("Loading faces ...");
   for (vector<string>::iterator it = classes.begin(); it != classes.end(); it++) {
     for (unsigned int i = 1; ; i++) {
-        string filename = join(join(dataset, "training"), join(*it, format("%d.jpg", i)));
-        cout << filename << endl;
-        Mat image = imread(filename, IMREAD_GRAYSCALE);
-        Mat resized;
-        if (image.empty()) {
-            cout << "image: " << filename << " is empty" << endl;
-            break;
-        }
-        resize(image, resized, reference_size);
-        Mat sample = resized;
-        if (!sample.empty()) {
-            faces.push_back(sample);
-            ids.push_back(class_id);
-        }
+      string filename = join(join(dataset, "training"), join(*it, format("%d.jpg", i)));
+      // cout << filename << endl;
+      Mat image = imread(filename, IMREAD_GRAYSCALE);
+      Mat resized;
+      if (image.empty()) {
+        // cout << "image: " << filename << " is empty" << endl;
+        break;
+      }
+      resize(image, resized, reference_size);
+      Mat sample = resized;
+      if (!sample.empty()) {
+        faces.push_back(sample);
+        ids.push_back(class_id);
+      }
     }
     class_id++;
   }
 }
 
+void recognize(const detection_msgs::DetectionConstPtr &det) {
+  cv_bridge::CvImageConstPtr cv_ptr;
+  cv_ptr = cv_bridge::toCvShare(det -> image, det, sensor_msgs::image_encodings::BGR8);
+  if (cv_ptr -> image.empty())
+    return;
+  Mat resized;
+  cvtColor(cv_ptr -> image, resized, CV_BGR2GRAY, 1);
+  resize(resized, resized, reference_size);
+  cout << resized.cols << " " << resized.rows << endl;
+  Mat sample = resized;
+  if (!sample.empty()) {
+    int label;
+    double confidence;
+    recognizer->predict(sample, label, confidence);
+    Mat visualization;
+    // TODO: 
+    cout << "I recognized: " << classes[label] << endl;
+    // ros::ROS_INFO("I recognized: " + classes[label]);
+  }
+}
+
 int main( int argc, char** argv ) {
+  ros::init(argc, argv, "face_recognizer");
+  NodeHandle node;
   vector<Mat> faces;
   vector<int> ids;
   string user_name(getenv("USER"));
+  /* path to the database */
   string dataset("/home/" + user_name + "/ROS/data/faces"), raw;
+  /**/
   raw = "ellen;filip;forest;harry;kim;mathew;peter;scarlett;tina";
-  vector<string> classes = split(raw, ';');
+  classes = split(raw, ';');
   load_faces(dataset, classes, faces, ids);
-  Ptr<FaceRecognizer> recognizer = createEigenFaceRecognizer();
-  cout << "Training model ..." << endl;
+  
+  recognizer = createEigenFaceRecognizer();
+  ROS_INFO("Training model ...");
   recognizer->train(faces, ids);
-  cout << "Testing model ..." << endl;
-  for (unsigned int i = 1; ; i++) {
+
+  ROS_INFO("Waiting for face to recognize: ");
+  /*for (unsigned int i = 1; ; i++) {
     string filename = join(join(dataset, "testing"), format("%d.jpg", i));
     Mat image = imread(filename, IMREAD_GRAYSCALE);
     if (image.empty())
@@ -67,14 +102,12 @@ int main( int argc, char** argv ) {
       double confidence;
       recognizer->predict(sample, label, confidence);
       Mat visualization;
-      /*cvtColor(image, visualization, COLOR_GRAY2BGR); 
-      putText(visualization, format("%s (%.3f)", classes[label].c_str(), confidence), Point(10, 10), FONT_HERSHEY_SIMPLEX, 0.3,
-        Scalar(255, 0, 0), 1, 8);
-      imshow(WINDOW_NAME, visualization);
-      waitKey(0);*/
+      // TODO: 
       cout << i << " -> " << classes[label] << endl;
     }
-  }
+  }*/
+  sub = node.subscribe("/facedetector/faces", 100, recognize);
+  spin();
   return 0;
 }
 

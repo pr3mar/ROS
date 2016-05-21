@@ -147,9 +147,9 @@ ADD_EXECUTABLE(faces src/face_rec.cpp src/utilities.cpp)
 # add_dependencies(recognizer_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(recognizer_node
-#   ${catkin_LIBRARIES}
-# )
+target_link_libraries(faces
+  ${catkin_LIBRARIES}
+)
 
 #############
 ## Install ##
