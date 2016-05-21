@@ -18,6 +18,9 @@ MESSAGE("LIBS: " ${OpenCV_LIBS})
 SET(OpenCV_INCLUDE_DIR "/usr/include/opencv2")
 INCLUDE_DIRECTORIES(AFTER ${CMAKE_CURRENT_BINARY_DIR} ${OpenCV_INCLUDE_DIR})
 MESSAGE("INCLUDE: " ${OpenCV_INCLUDE_DIR})
+
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 ")
+
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
