@@ -4,13 +4,18 @@ project(recognizer)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS
+find_package(OpenCV REQUIRED)
+find_package(
+  catkin REQUIRED COMPONENTS
   cv_bridge
   roscpp
   rospy
   sensor_msgs
   std_msgs
 )
+LINK_LIBRARIES(${OpenCV_LIBS})
+
+INCLUDE_DIRECTORIES(AFTER ${CMAKE_CURRENT_BINARY_DIR} ${OpenCV_INCLUDE_DIR})
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -131,6 +136,7 @@ include_directories(
 
 ## Declare a C++ executable
 # add_executable(recognizer_node src/recognizer_node.cpp)
+ADD_EXECUTABLE(faces src/face_rec.cpp src/utilities.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
