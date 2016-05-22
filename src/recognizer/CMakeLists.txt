@@ -12,6 +12,7 @@ find_package(
   rospy
   sensor_msgs
   std_msgs
+  detection_msgs
 )
 LINK_LIBRARIES(${OpenCV_LIBS})
 MESSAGE("LIBS: " ${OpenCV_LIBS})
@@ -138,19 +139,27 @@ include_directories(
 ## either from message generation or dynamic reconfigure
 # add_dependencies(recognizer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
+#add_dependencies(faces ${catkin_EXPORTED_TARGETS})
+
+#add_dependencies(signs ${catkin_EXPORTED_TARGETS})
+
 ## Declare a C++ executable
 # add_executable(recognizer_node src/recognizer_node.cpp)
 ADD_EXECUTABLE(faces src/face_rec.cpp src/utilities.cpp)
+ADD_EXECUTABLE(signs src/sign_rec.cpp src/utilities.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-# add_dependencies(recognizer_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(faces ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(signs ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(faces
   ${catkin_LIBRARIES}
 )
-
+target_link_libraries(signs
+  ${catkin_LIBRARIES}
+)
 #############
 ## Install ##
 #############

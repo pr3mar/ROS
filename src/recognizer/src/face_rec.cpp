@@ -1,7 +1,4 @@
 #include <ros/ros.h>
-#include <sensor_msgs/image_encodings.h>
-#include <cv_bridge/cv_bridge.h>
-#include <detection_msgs/Detection.h>
 #include <cstdio>
 #include <iostream>
 #include <vector>
@@ -12,6 +9,10 @@
 #include <opencv2/contrib/contrib.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+
+#include <sensor_msgs/image_encodings.h>
+#include <cv_bridge/cv_bridge.h>
+#include <detection_msgs/Detection.h>
 
 using namespace std;
 using namespace cv;
