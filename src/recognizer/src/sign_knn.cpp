@@ -9,6 +9,7 @@
 #include <opencv2/contrib/contrib.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/ml/ml.hpp>
 
 #include <sensor_msgs/image_encodings.h>
 #include <cv_bridge/cv_bridge.h>
@@ -20,10 +21,12 @@ using namespace ros;
 
 #include "utilities.h"
 
-Size reference_size(50, 50);
+Size reference_size(20, 20);
+int k = reference_size.width * reference_size.height;
 Subscriber sub;
 Ptr<FaceRecognizer> recognizer;
 vector<string> classes;
+Mat trainData, res_trainData;
 
 void load_signs(string dataset, vector<string> classes, vector<Mat>& signs, vector<int>& ids) {
 	int class_id = 0;
@@ -38,6 +41,7 @@ void load_signs(string dataset, vector<string> classes, vector<Mat>& signs, vect
 				break;
 			}
 			resize(image, resized, reference_size);
+			resized = resized.reshape(0, 1);
 			Mat sample = resized;
 			if (!sample.empty()) {
 				signs.push_back(sample);
@@ -46,31 +50,23 @@ void load_signs(string dataset, vector<string> classes, vector<Mat>& signs, vect
 		}
 		class_id++;
 	}
-}
-
-void recognize(const detection_msgs::DetectionConstPtr &det) {
-	cv_bridge::CvImageConstPtr cv_ptr;
-	cv_ptr = cv_bridge::toCvShare(det -> image, det, sensor_msgs::image_encodings::BGR8);
-	if (cv_ptr -> image.empty())
-		return;
-	Mat resized;
-	cvtColor(cv_ptr -> image, resized, CV_BGR2GRAY, 1);
-	resize(resized, resized, reference_size);
-	Mat sample = resized;
-	if (!sample.empty()) {
-		int label;
-		double confidence;
-		recognizer->predict(sample, label, confidence);
-		Mat visualization;
-    // TODO: 
-		cout << "I recognized: " << classes[label] <<  " with confidence " << confidence << endl;
-    // ros::ROS_INFO("I recognized: " + classes[label]);
+	trainData = Mat::zeros(signs.size(), k, CV_32FC1);
+	res_trainData = Mat::zeros(signs.size(), 1, CV_32FC1);
+	cout << "cols: " << trainData.cols << ", rows:" << trainData.rows << endl;
+	for(int i = 0; i < signs.size(); i++) {
+		// cout << "cols: " <<signs[i].cols << ", rows:" << signs[i].rows << endl;
+		signs[i].row(0).copyTo(trainData.row(i));
 	}
+	// imshow("This is madafuking gud", trainData);
+	// waitKey(0);
 }
 
+void recognize() {
+
+}
 
 int main(int argc, char **argv) {
-	init(argc, argv, "sign_recognition");
+	init(argc, argv, "sign_knn_recognition");
 	NodeHandle node;
 	string user_name(getenv("USER"));
 	string dataset("/home/" + user_name + "/ROS/data/signs");
@@ -79,13 +75,8 @@ int main(int argc, char **argv) {
 	std::vector<Mat> signs;
 	vector<int> ids;
 	load_signs(dataset, classes, signs, ids);
+	CvKNearest knn(trainData, res_trainData, Mat(), false, k);
+	// TODO: test if this is what you expected it is.
 
-	ROS_INFO("Training model ...");
-	recognizer = createEigenFaceRecognizer();
-	recognizer->train(signs, ids);
-	
-	ROS_INFO("Waiting for a sign to recognize ...");
-	sub = node.subscribe("/detector/traffic_signs", 100, recognize);
-	spin();
 	return 0;
 }

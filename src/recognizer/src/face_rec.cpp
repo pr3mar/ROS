@@ -21,8 +21,6 @@ using namespace ros;
 
 #include "utilities.h"
 
-#define WINDOW_NAME "Face recognition"
-
 Size reference_size(50, 50);
 Subscriber sub;
 Ptr<FaceRecognizer> recognizer;
@@ -40,16 +38,16 @@ void load_faces(string dataset, vector<string> classes, vector<Mat>& faces, vect
       if (image.empty()) {
         // cout << "image: " << filename << " is empty" << endl;
         break;
-      }
-      resize(image, resized, reference_size);
-      Mat sample = resized;
-      if (!sample.empty()) {
+    }
+    resize(image, resized, reference_size);
+    Mat sample = resized;
+    if (!sample.empty()) {
         faces.push_back(sample);
         ids.push_back(class_id);
-      }
     }
-    class_id++;
-  }
+}
+class_id++;
+}
 }
 
 void recognize(const detection_msgs::DetectionConstPtr &det) {
@@ -57,12 +55,12 @@ void recognize(const detection_msgs::DetectionConstPtr &det) {
   cv_ptr = cv_bridge::toCvShare(det -> image, det, sensor_msgs::image_encodings::BGR8);
   if (cv_ptr -> image.empty())
     return;
-  Mat resized;
-  cvtColor(cv_ptr -> image, resized, CV_BGR2GRAY, 1);
-  resize(resized, resized, reference_size);
-  cout << resized.cols << " " << resized.rows << endl;
-  Mat sample = resized;
-  if (!sample.empty()) {
+Mat resized;
+cvtColor(cv_ptr -> image, resized, CV_BGR2GRAY, 1);
+resize(resized, resized, reference_size);
+cout << resized.cols << " " << resized.rows << endl;
+Mat sample = resized;
+if (!sample.empty()) {
     int label;
     double confidence;
     recognizer->predict(sample, label, confidence);
@@ -70,7 +68,7 @@ void recognize(const detection_msgs::DetectionConstPtr &det) {
     // TODO: 
     cout << "I recognized: " << classes[label] << endl;
     // ros::ROS_INFO("I recognized: " + classes[label]);
-  }
+}
 }
 
 int main( int argc, char** argv ) {
@@ -86,27 +84,11 @@ int main( int argc, char** argv ) {
   classes = split(raw, ';');
   load_faces(dataset, classes, faces, ids);
   
-  recognizer = createEigenFaceRecognizer();
   ROS_INFO("Training model ...");
+  recognizer = createEigenFaceRecognizer();
   recognizer->train(faces, ids);
 
   ROS_INFO("Waiting for face to recognize: ");
-  /*for (unsigned int i = 1; ; i++) {
-    string filename = join(join(dataset, "testing"), format("%d.jpg", i));
-    Mat image = imread(filename, IMREAD_GRAYSCALE);
-    if (image.empty())
-      break;
-    resize(image, image, reference_size);
-    Mat sample = image;
-    if (!sample.empty()) {
-      int label;
-      double confidence;
-      recognizer->predict(sample, label, confidence);
-      Mat visualization;
-      // TODO: 
-      cout << i << " -> " << classes[label] << endl;
-    }
-  }*/
   sub = node.subscribe("/facedetector/faces", 100, recognize);
   spin();
   return 0;
