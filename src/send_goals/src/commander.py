@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import nltk
 import rospy
 from std_msgs.msg import String
 from sound_play.msg import SoundRequest
@@ -11,7 +12,7 @@ def callback(data):
     tmp = SoundRequest()
     tmp.sound = -3
     tmp.command = 1
-    tmp.arg = 'Marko I am so sorry but I will not be able to come in tomorrow, please do not kill me! This is not a joke. Your dear friend Jacob'
+    tmp.arg = data.data
     tmp.arg2 = ''
     
     pub = rospy.Publisher('/robotsound', SoundRequest, queue_size=1)
