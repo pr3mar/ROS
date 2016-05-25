@@ -79,10 +79,11 @@ def callback(data):
 
 
     #this doesnt work the first time
+    str_speech = name + ", where would you like to go?"
     tmp = SoundRequest()
     tmp.sound = -3
     tmp.command = 1
-    tmp.arg = name + ", where would you like to go?"
+    tmp.arg = str_speech
     tmp.arg2 = ''
     
     pub = rospy.Publisher('/robotsound', SoundRequest, queue_size=1)
