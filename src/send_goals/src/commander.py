@@ -75,14 +75,13 @@ def callback(data):
         colour_street = min_distance_one(tokens[street[1]-1], colours)
 
     print "Mission Impossible: %s %s %s %s %s"%(name,  colour_building, building[0], colour_street, street[0])
-
-
-
-    #this doesnt work the first time
+    
+    #this doesnt work the first time - nobody knows why???
+    str_speech = name + ", where would you like to go?"
     tmp = SoundRequest()
     tmp.sound = -3
     tmp.command = 1
-    tmp.arg = name + ", where would you like to go?"
+    tmp.arg = str_speech
     tmp.arg2 = ''
     
     pub = rospy.Publisher('/robotsound', SoundRequest, queue_size=1)
