@@ -146,7 +146,7 @@ include_directories(
 ## Declare a C++ executable
 # add_executable(recognizer_node src/recognizer_node.cpp)
 ADD_EXECUTABLE(faces src/face_rec.cpp src/utilities.cpp)
-ADD_EXECUTABLE(signs src/sign_knn.cpp src/utilities.cpp)
+ADD_EXECUTABLE(signs src/hog_signs.cpp src/utilities.cpp src/svmExtended.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above

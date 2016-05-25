@@ -80,6 +80,7 @@ def callback(data):
 
     #this doesnt work the first time
     str_speech = name + ", where would you like to go?"
+    print str_speech
     tmp = SoundRequest()
     tmp.sound = -3
     tmp.command = 1
