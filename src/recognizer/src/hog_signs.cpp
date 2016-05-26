@@ -28,7 +28,8 @@ Subscriber sub;
 vector<string> classes;
 vector<Mat> HOGFeatures;
 Mat trainSVM, labels;
-CvSVM svm;
+vector<Ptr<CvSVM>> svms;
+vector<Mat> allLabels;
 
 void load_signs(string dataset, vector<string> classes, vector<Mat>& signs, vector<int>& ids) {
 	int class_id = 0;
@@ -76,19 +77,39 @@ void buildHogDescriptors(vector<Mat> &signs, vector<int> &ids) {
 	// waitKey(0);
 }
 
-void train() {
+void train(vector<int> &ids) {
     cout << "training data ..." << endl;
     // Set up SVM's parameters
     CvSVMParams params;
     params.svm_type    = CvSVM::C_SVC;
     params.kernel_type = CvSVM::LINEAR;
     params.term_crit   = cvTermCriteria(CV_TERMCRIT_ITER, 100, 1e-6);
-	svm.train_auto(trainSVM, labels, Mat(), Mat(), params);
+    for(int i = 0; i < classes.size(); i++) {
+    	Mat currentLabels(Size(1, trainSVM.rows), CV_32FC1);
+    	for(int j = 0; j < ids.size(); j++) {
+    		if(i == ids[j]) {
+    			// cout << "positive ";
+    			currentLabels.at<float>(j, 0) = 1;
+    		}
+    		else {
+    			// cout << "negative ";
+    			currentLabels.at<float>(j, 0) = -1;
+    		}
+    		// cout << currentLabels.at<float>(j,0) << endl;
+    	}
+    	// cout << currentLabels.rows << " " << currentLabels.cols << endl << endl;
+    	// cout << currentLabels << endl << endl;
+    	allLabels.push_back(currentLabels);
+    	CvSVM *svm = new CvSVM;
+    	svm->train_auto(trainSVM, currentLabels, Mat(), Mat(), params);
+    	svms.push_back(svm);
+    }
+	
 	// TODO: make a for loop to do one vs all!!
 	// svm.save("svm.xml");
 }
 
-void test(string dataset) {
+/*void test(string dataset) {
 	cout << "testing ... " << endl;
 	for (unsigned int i = 1; ; i++) {
 		string filename = join(join(dataset, "testing"), format("%d.jpg", i));
@@ -111,7 +132,7 @@ void test(string dataset) {
 		float confidence = 1.0 / (1.0 + exp(-ans));
 		cout << ans << " " << confidence << endl;
 	}
-}
+}*/
 
 int main(int argc, char **argv) {
 	// init(argc, argv, "sign_recognition");
@@ -124,8 +145,8 @@ int main(int argc, char **argv) {
 	vector<int> ids;
 	load_signs(dataset, classes, signs, ids);
 	buildHogDescriptors(signs, ids);
-	train();
-	test(dataset);
+	train(ids);
+	//test(dataset);
 
 	// ROS_INFO("Training model ...");
 
