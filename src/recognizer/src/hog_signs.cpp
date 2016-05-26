@@ -38,7 +38,7 @@ void load_signs(string dataset, vector<string> classes, vector<Mat>& signs, vect
 		for (unsigned int i = 1; ; i++) {
 			string filename = join(join(dataset, "training"), join(*it, format("%d.jpg", i)));
 			// cout << filename << endl;
-			Mat image = imread(filename, IMREAD_COLOR);
+			Mat image = imread(filename, IMREAD_GRAYSCALE);
 			Mat resized;
 			if (image.empty()) {
 				break;
@@ -61,7 +61,7 @@ void buildHogDescriptors(vector<Mat> &signs, vector<int> &ids) {
 	for(int i = 0; i < signs.size(); i++) {
 		HOGDescriptor desc;
 		vector<float> descriptors;
-		desc.compute(signs.at(i), descriptors);
+		desc.compute(signs.at(i), descriptors, Size(32, 32), Size(0,0));
 		labels.at<float>(0, i) = ids.at(i);
 		// Mat featNow(descriptors.size(), 1, CV_32FC1);
 		// cout << signs.at(i) << endl;
@@ -73,8 +73,8 @@ void buildHogDescriptors(vector<Mat> &signs, vector<int> &ids) {
 		// break;
 	}
 	// cout << trainSVM.cols << " " << trainSVM.rows << endl;
-	// imshow("img", labels);
-	// waitKey(0);
+	imshow("img", trainSVM);
+	waitKey(0);
 }
 
 void train(vector<int> &ids) {
@@ -132,7 +132,7 @@ void test(string dataset) {
 	for (unsigned int i = 1; ; i++) {
 		string filename = join(join(dataset, "testing"), format("%d.jpg", i));
 		cout << filename << endl;
-		Mat test_image = imread(filename, IMREAD_COLOR);
+		Mat test_image = imread(filename, IMREAD_GRAYSCALE);
 		if (test_image.empty()) {
 			break;
 		}
@@ -141,29 +141,64 @@ void test(string dataset) {
 
 		HOGDescriptor desc;
 		vector<float> descriptors;
-		desc.compute(test_image, descriptors);
+		desc.compute(test_image, descriptors, Size(32, 32), Size(0,0));
 		Mat t_img(Size(1, descriptors.size()), CV_32FC1);
 		for(int j = 0; j < descriptors.size(); j++) {
 			t_img.at<float>(i, j) = descriptors.at(j);
 		}
-		int minVal = 1000000, maxID = 0;
+		float minVal = 1000000; int maxID = 0;
 		for(int i = 0; i < svms.size(); i++) {
-			float ans = svms[i] -> predict(t_img, false);
-			/*float confidence = 1.0 / (1.0 + exp(-ans));
-			if(confidence < minVal) {
+			float ans = svms[i] -> predict(t_img, true);
+			float confidence = 1.0 / (1.0 + exp(-ans));
+			if(minVal > confidence) {
 				minVal = confidence;
 				maxID = i;
-			}*/
-			cout << classes[i] << " " << ans << endl;//" " << confidence << endl;
+			}
+			// cout << classes[i] << " " << ans << endl;//" " << confidence << endl;
 		}
-		cout << endl;
-		//cout << "final: " << minVal << " " << classes[maxID] << endl;
+		// cout << endl;
+		cout << "final: " << minVal << " " << classes[maxID] << endl;
 	}
 }
 
+void recognize(const detection_msgs::DetectionConstPtr &det) {
+  cv_bridge::CvImageConstPtr cv_ptr;
+  cv_ptr = cv_bridge::toCvShare(det -> image, det, sensor_msgs::image_encodings::BGR8);
+  if (cv_ptr -> image.empty())
+      return;
+  Mat resized;
+  cvtColor(cv_ptr -> image, resized, CV_BGR2GRAY, 1);
+  resize(resized, resized, reference_size);
+  // cout << resized.cols << " " << resized.rows << endl;
+  Mat sample = resized;
+  if (!sample.empty()) {
+		// int label;
+		// double confidence;
+		// recognizer->predict(sample, label, confidence);
+		
+		HOGDescriptor desc;
+		vector<float> descriptors;
+		desc.compute(sample, descriptors, Size(32, 32), Size(0,0));
+		Mat t_img(Size(1, descriptors.size()), CV_32FC1);
+		for(int j = 0; j < descriptors.size(); j++) {
+			t_img.at<float>(0, j) = descriptors.at(j);
+		}
+		float minVal = 1000000; int maxID = 0;
+		for(int i = 0; i < svms.size(); i++) {
+			float ans = svms[i] -> predict(t_img, true);
+			float confidence = 1.0 / (1.0 + exp(-ans));
+			if(minVal > confidence) {
+				minVal = confidence;
+				maxID = i;
+			}
+			// cout << classes[i] << " " << confidence << endl;
+		}
+		cout << "final: " << minVal << " " << classes[maxID] << endl << endl;
+  }
+}
 int main(int argc, char **argv) {
-	// init(argc, argv, "sign_recognition");
-	// NodeHandle node;
+	init(argc, argv, "sign_recognition");
+	NodeHandle node;
 	string user_name(getenv("USER"));
 	string dataset("/home/" + user_name + "/ROS/data/signs");
 	string svm_path("/home/" + user_name + "/ROS/svm");
@@ -175,14 +210,14 @@ int main(int argc, char **argv) {
 	buildHogDescriptors(signs, ids);
 	// train(ids);
 	load_svms(svm_path);
-	test(dataset);
+	// test(dataset);
 
 	// ROS_INFO("Training model ...");
 
 	
-	// ROS_INFO("Waiting for a sign to recognize ...");
-	// sub = node.subscribe("/detector/traffic_signs", 100, recognize);
-	// spin();
+	ROS_INFO("Waiting for a sign to recognize ...");
+	sub = node.subscribe("/detector/traffic_signs", 100, recognize);
+	spin();
 	return 0;
 }
 
