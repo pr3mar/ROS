@@ -21,7 +21,7 @@ using namespace ros;
 
 #include "utilities.h"
 
-Size reference_size(20, 20);
+Size reference_size(50, 50);
 int k = reference_size.width * reference_size.height;
 Subscriber sub;
 Ptr<FaceRecognizer> recognizer;

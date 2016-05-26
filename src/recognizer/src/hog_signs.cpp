@@ -38,7 +38,7 @@ void load_signs(string dataset, vector<string> classes, vector<Mat>& signs, vect
 		for (unsigned int i = 1; ; i++) {
 			string filename = join(join(dataset, "training"), join(*it, format("%d.jpg", i)));
 			// cout << filename << endl;
-			Mat image = imread(filename, IMREAD_GRAYSCALE);
+			Mat image = imread(filename, IMREAD_COLOR);
 			Mat resized;
 			if (image.empty()) {
 				break;
@@ -81,10 +81,17 @@ void train(vector<int> &ids) {
     cout << "training data ..." << endl;
     // Set up SVM's parameters
     CvSVMParams params;
-    params.svm_type    = CvSVM::C_SVC;
-    params.kernel_type = CvSVM::LINEAR;
-    params.term_crit   = cvTermCriteria(CV_TERMCRIT_ITER, 100, 1e-6);
+    params.svm_type    = CvSVM::C_SVC;//EPS_SVR;//C_SVC;//
+    params.kernel_type = CvSVM::RBF;//POLY;//SIGMOID;//LINEAR;//
+    // params.degree = 3;
+    // params.p = 0.9;
+    params.C = pow(2,-5);
+    params.gamma = pow(2,-5);
+    // params.coef0 = 0.001;
+    // params.nu = 0.90;
+    params.term_crit = cvTermCriteria(CV_TERMCRIT_ITER, 10000, 1e-9);
     for(int i = 0; i < classes.size(); i++) {
+    	cout << "training " << i << " ..." << endl;
     	Mat currentLabels(Size(1, trainSVM.rows), CV_32FC1);
     	for(int j = 0; j < ids.size(); j++) {
     		if(i == ids[j]) {
@@ -101,7 +108,9 @@ void train(vector<int> &ids) {
     	// cout << currentLabels << endl << endl;
     	allLabels.push_back(currentLabels);
     	CvSVM *svm = new CvSVM;
-    	svm->train_auto(trainSVM, currentLabels, Mat(), Mat(), params);
+    	svm->train_auto(trainSVM, currentLabels, Mat(), Mat(), params, 100);
+    	string fname = "svm/" + to_string(i) + "_c_rbf.xml";
+    	svm -> save(fname.c_str());
     	svms.push_back(svm);
     }
 	
@@ -109,12 +118,21 @@ void train(vector<int> &ids) {
 	// svm.save("svm.xml");
 }
 
-/*void test(string dataset) {
+void load_svms(string path) {
+	for(int i = 0; i < classes.size(); i++) {
+		CvSVM *svm = new CvSVM;
+		string p = join(path,format("%d_c_rbf.xml", i));
+		svm -> load(p.c_str());
+		svms.push_back(svm);
+	}
+}
+
+void test(string dataset) {
 	cout << "testing ... " << endl;
 	for (unsigned int i = 1; ; i++) {
 		string filename = join(join(dataset, "testing"), format("%d.jpg", i));
-		// cout << filename << endl;
-		Mat test_image = imread(filename, IMREAD_GRAYSCALE);
+		cout << filename << endl;
+		Mat test_image = imread(filename, IMREAD_COLOR);
 		if (test_image.empty()) {
 			break;
 		}
@@ -128,25 +146,36 @@ void train(vector<int> &ids) {
 		for(int j = 0; j < descriptors.size(); j++) {
 			t_img.at<float>(i, j) = descriptors.at(j);
 		}
-		float ans = svm.predict(t_img, true);
-		float confidence = 1.0 / (1.0 + exp(-ans));
-		cout << ans << " " << confidence << endl;
+		int minVal = 1000000, maxID = 0;
+		for(int i = 0; i < svms.size(); i++) {
+			float ans = svms[i] -> predict(t_img, false);
+			/*float confidence = 1.0 / (1.0 + exp(-ans));
+			if(confidence < minVal) {
+				minVal = confidence;
+				maxID = i;
+			}*/
+			cout << classes[i] << " " << ans << endl;//" " << confidence << endl;
+		}
+		cout << endl;
+		//cout << "final: " << minVal << " " << classes[maxID] << endl;
 	}
-}*/
+}
 
 int main(int argc, char **argv) {
 	// init(argc, argv, "sign_recognition");
 	// NodeHandle node;
 	string user_name(getenv("USER"));
 	string dataset("/home/" + user_name + "/ROS/data/signs");
+	string svm_path("/home/" + user_name + "/ROS/svm");
 	string raw = "honk;left;limit;oneway;stop";
 	classes = split(raw,';');
 	std::vector<Mat> signs;
 	vector<int> ids;
 	load_signs(dataset, classes, signs, ids);
 	buildHogDescriptors(signs, ids);
-	train(ids);
-	//test(dataset);
+	// train(ids);
+	load_svms(svm_path);
+	test(dataset);
 
 	// ROS_INFO("Training model ...");
 
@@ -156,3 +185,4 @@ int main(int argc, char **argv) {
 	// spin();
 	return 0;
 }
+
