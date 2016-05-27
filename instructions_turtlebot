@@ -53,5 +53,7 @@ roslaunch turtlebot_rviz_launchers view_navigation.launch --screen
 /move_base_simple/goal
 /move_base/status 
 
+#reconfigure the speed/other params
+rosrun rqt_reconfigure rqt_reconfigure
 
-# NLP -> levenstein distance ... !!!!
+# NLP -> levenshtein distance ... !!!!
