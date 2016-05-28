@@ -80,6 +80,9 @@ class SendGoal():
             colour_street = min_distance_one(tokens[street[1]-1], colours)
 
         print "Mission Impossible: %s %s %s %s %s"%(name,  colour_building, building[0], colour_street, street[0])
+
+        #send robot to the right street
+        rospy.Subscriber('move_base/status', GoalStatusArray, self.callback)
         
         #this doesnt work the first time - nobody knows why???
         str_speech = name + ", where would you like to go?"
@@ -137,6 +140,13 @@ class SendGoal():
         rospy.loginfo("sending goal" + str(self.nextID))  # str(self.point_list[self.nextID]))
         pub.publish(self.point_list[self.nextID])
 
+    def sendOneGoal(self, goal):
+        pub = rospy.Publisher("move_base_simple/goal", PoseStamped, queue_size=1)
+        # print self.point_list[self.nextID]
+        rospy.loginfo("sending goal")
+        pub.publish(goal)
+
+
     def callback(self, data):
         if self.nextID >= len(self.point_list):
             sys.exit(0)
@@ -173,6 +183,13 @@ class SendGoal():
                    -0.078, -0.734]
         w_coord = [0.760, 0.997, 0.686, 0.726, 0.76, 0.760, 0.176, 0.199, 0.078, 0.176, 0.571, 0.681, 0.996, 0.996,
                    0.678]
+
+        #green street
+
+        #blue street
+
+        #red street
+
         self.point_list = []
         for i in range(len(x_coord)):
             tmp = PoseStamped()
