@@ -33,8 +33,9 @@ public:
 	void addInEdge(Node in);
 	void addOutEdge(Node out);
 	move_base_msgs::MoveBaseGoal getGoal();
+	int current_id;
 private:
-	// static int id = 0;
+	static int node;
 	move_base_msgs::MoveBaseGoal goal;
 	Node *prev;
 	std::vector<Edge> ingoing;

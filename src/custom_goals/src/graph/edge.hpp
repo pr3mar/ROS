@@ -6,8 +6,6 @@
 #include <vector>
 #include <math.h>
 
-#include "node.hpp"
-
 class Node;
 
 class Edge

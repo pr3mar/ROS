@@ -4,9 +4,13 @@ using namespace std;
 using namespace ros;
 
 
+int Node::node = 0;
+
 Node::Node(move_base_msgs::MoveBaseGoal &goal) {
 	this -> goal = goal;
 	prev = null;
+	id = node;
+	node++;
 }
 
 void Node::addInEdge(Node in) {
@@ -23,4 +27,12 @@ int Node::getDegree() {
 
 move_base_msgs::MoveBaseGoal getGoal() {
 	return goal;
+}
+
+bool Node::operator==(const Node &other) const {
+	return (id == other.id);
+}
+
+bool Node::operator!=(const Node &other) const {
+	return !(*this == other);
 }

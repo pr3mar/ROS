@@ -13,6 +13,7 @@
 #include <sensor_msgs/image_encodings.h>
 #include <cv_bridge/cv_bridge.h>
 #include <detection_msgs/Detection.h>
+#include <std_msgs/String.h>
 
 using namespace std;
 using namespace cv;
@@ -23,6 +24,7 @@ using namespace ros;
 
 Size reference_size(50, 50);
 Subscriber sub;
+Publisher pub;
 Ptr<FaceRecognizer> recognizer;
 vector<string> classes;
 
@@ -66,8 +68,13 @@ void recognize(const detection_msgs::DetectionConstPtr &det) {
       recognizer->predict(sample, label, confidence);
       Mat visualization;
       // TODO: 
-      cout << "I recognized: " << classes[label] << endl;
+      // cout << "I recognized: " << classes[label] << endl;
       // ros::ROS_INFO("I recognized: " + classes[label]);
+      std_msgs::String msg;
+      stringstream ss;
+      ss << classes[label];
+      msg.data = ss.str();
+      pub.publish(msg);
   }
 }
 
@@ -90,6 +97,7 @@ int main( int argc, char** argv ) {
 
   ROS_INFO("Waiting for face to recognize: ");
   sub = node.subscribe("/facedetector/faces", 100, recognize);
+  pub = node.advertise<std_msgs::String>("/face_recognizer/face", 1000);
   spin();
   return 0;
 }
