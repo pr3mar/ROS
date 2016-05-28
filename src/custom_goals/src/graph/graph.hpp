@@ -13,10 +13,13 @@
 #include <move_base_msgs/MoveBaseGoal.h>
 #include <actionlib_msgs/GoalStatusArray.h>
 
+#include "node.hpp"
+#include "edge.hpp"
 
 class Graph {
 public:
 	Graph();
+	void dijkstra(Node from, Node to);
 private:
-
+	std::vector<Node> shortest;
 };

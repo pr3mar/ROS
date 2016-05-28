@@ -57,3 +57,10 @@ roslaunch turtlebot_rviz_launchers view_navigation.launch --screen
 rosrun rqt_reconfigure rqt_reconfigure
 
 # NLP -> levenshtein distance ... !!!!
+
+
+# reconfiguration of the speed via a program!
+import dynamic_reconfigure.client
+self.client = dynamic_reconfigure.client.Client("navigation_velocity_smoother")
+
+self.client.update_configuration({"speed_lim_v": 0}) // stop sign
