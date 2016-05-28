@@ -11,9 +11,10 @@ class Node;
 class Edge
 {
 public:
-	Edge(Node *from_, Node *to_);
-	~Edge();
+	Edge(Node &from_, Node &to_);
+	~Edge() {};
 private:
+	float calc_dist();
 	Node *from;
 	Node *to;
 	float cost;

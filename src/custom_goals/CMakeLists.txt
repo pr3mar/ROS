@@ -130,7 +130,7 @@ include_directories(
 ## either from message generation or dynamic reconfigure
 
 ## Declare a C++ executable
-add_executable(graph src/graph/graph.cpp)
+add_executable(graph src/graph/graph.cpp src/graph/node.cpp src/graph/edge.cpp)
 
 add_dependencies(graph ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
