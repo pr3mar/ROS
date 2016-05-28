@@ -18,8 +18,9 @@
 
 class Graph {
 public:
-	Graph();
-	void dijkstra(Node from, Node to);
+	Graph(std::vector<move_base_msgs::MoveBaseGoal> goals);
+	void dijkstra(Node *from, Node *to);
 private:
+	std::vector<Node> nodes;
 	std::vector<Node> shortest;
 };

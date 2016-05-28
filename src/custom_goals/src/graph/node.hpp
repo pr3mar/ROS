@@ -28,15 +28,15 @@ class Node
 {
 public:
 	Node(move_base_msgs::MoveBaseGoal &goal);
-	~Node();
+	~Node(){};
 	int getDegree();
-	void addInEdge(Node in);
-	void addOutEdge(Node out);
-	move_base_msgs::MoveBaseGoal getGoal();
+	void addInEdge(Node &in);
+	void addOutEdge(Node &out);
+	move_base_msgs::MoveBaseGoal* getGoal();
 	int current_id;
+	move_base_msgs::MoveBaseGoal *goal;
 private:
 	static int node;
-	move_base_msgs::MoveBaseGoal goal;
 	Node *prev;
 	std::vector<Edge> ingoing;
 	std::vector<Edge> outgoing;
