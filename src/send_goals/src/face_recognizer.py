@@ -9,6 +9,7 @@ markers_pub = None
 current_point = None
 det = {}
 detected = 0
+detect_true = 0
 peter = 0
 tina = 0
 harry = 0
@@ -32,6 +33,7 @@ def recognized_face(data):
     global ellen
     global current_point
     global markers_pub
+    global detect_true
 
     name = data.data
     print name
@@ -40,47 +42,48 @@ def recognized_face(data):
     markers = []
     marker = Marker()
     marker = current_point
+    
+    if detect_true == 1:
+        if name == 'peter':
+            peter += 1
+            print peter
+            if peter > 100:
+                marker.color = ColorRGBA(128, 255, 0, 1)
+                markers.append(marker)
+                markers_pub.publish(markers)
 
-    if name == 'peter':
-        peter += 1
-        print peter
-        if peter > 100:
-            marker.color = ColorRGBA(128, 255, 0, 1)
-            markers.append(marker)
-            markers_pub.publish(markers)
-
-    elif name == 'tina':
-        tina += 1
-        print tina
-        marker.color = ColorRGBA(51, 51, 255, 1)
-    elif name == 'harry':
-        harry += 1
-        print harry
-        marker.color = ColorRGBA(255, 0, 0, 1)
-    elif name == 'forest':
-        forest += 1
-        print forest
-        marker.color = ColorRGBA(255, 128, 0, 1)
-    elif name == 'filip':
-        filip += 1
-        print filip
-        marker.color = ColorRGBA(102, 51, 0, 1)
-    elif name == 'kim':
-        kim += 1
-        print kim
-        marker.color = ColorRGBA(153, 0, 153, 1)
-    elif name == 'matthew':
-        matthew += 1
-        print matthew
-        marker.color = ColorRGBA(255, 255, 0, 1)
-    elif name == 'scarlett':
-        scarlett += 1
-        print scarlett
-        marker.color = ColorRGBA(255, 0, 127, 1)
-    elif name == 'ellen':
-        ellen += 1
-        print ellen
-        marker.color = ColorRGBA(0, 255, 255, 1)
+        elif name == 'tina':
+            tina += 1
+            print tina
+            marker.color = ColorRGBA(51, 51, 255, 1)
+        elif name == 'harry':
+            harry += 1
+            print harry
+            marker.color = ColorRGBA(255, 0, 0, 1)
+        elif name == 'forest':
+            forest += 1
+            print forest
+            marker.color = ColorRGBA(255, 128, 0, 1)
+        elif name == 'filip':
+            filip += 1
+            print filip
+            marker.color = ColorRGBA(102, 51, 0, 1)
+        elif name == 'kim':
+            kim += 1
+            print kim
+            marker.color = ColorRGBA(153, 0, 153, 1)
+        elif name == 'matthew':
+            matthew += 1
+            print matthew
+            marker.color = ColorRGBA(255, 255, 0, 1)
+        elif name == 'scarlett':
+            scarlett += 1
+            print scarlett
+            marker.color = ColorRGBA(255, 0, 127, 1)
+        elif name == 'ellen':
+            ellen += 1
+            print ellen
+            marker.color = ColorRGBA(0, 255, 255, 1)
     
     
 
@@ -97,6 +100,7 @@ def detection_thresh(points):
     global current_point
     global det
     global detected
+    global detect_true
 
     for newPoint in points.markers:
         current_point = newPoint
@@ -121,6 +125,7 @@ def detection_thresh(points):
                     min_point = "not"
 
         if min_point == None:
+            detect_true = 0     #when we detect new face, we dont want recognizer to work immediately, but wait for this to become 1 (which means: face detected!!)
             det[str(xp) + ";" + str(yp) + ";" + str(zp)] = {'count': 1, 'detected': False,
                                                                  'point': str(xp) + ";" + str(yp) + ";" + str(zp)}
         elif min_point != "not":
@@ -132,6 +137,7 @@ def detection_thresh(points):
                 print det
 
                 #so we detected a face - let's ask recognizer what he sees
+                detect_true = 1
                 peter = 0
                 tina = 0
                 harry = 0
@@ -151,7 +157,7 @@ def face_recognizer():
     rospy.init_node('face_recognizer', anonymous=True)
     rospy.Subscriber('facedetector/markers', MarkerArray, detection_thresh)
     markers_pub = rospy.Publisher('recognizer/face_marker', MarkerArray)
-    #rospy.Subscriber('face_recognizer/face', String, recognized_face)
+    rospy.Subscriber('face_recognizer/face', String, recognized_face)
 
     rospy.spin()
 
