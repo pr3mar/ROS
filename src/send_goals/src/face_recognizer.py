@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 
+import nltk
+from nltk.metrics import edit_distance
 import rospy
 from std_msgs.msg import String, ColorRGBA
 from geometry_msgs.msg import *
 from visualization_msgs.msg import Marker, MarkerArray
+from sound_play.msg import SoundRequest
 
 voice_pub = None
 markers_pub = None
@@ -20,6 +23,7 @@ kim = 0
 matthew = 0
 scarlett = 0
 ellen = 0
+sound_sent = 0
 
 def min_distance_all(tokens, find):
     name = None
@@ -87,6 +91,7 @@ def recognized_face(data):
     global current_point
     global markers_pub
     global detect_true
+    global sound_sent
 
     name = data.data
     print name
@@ -96,13 +101,17 @@ def recognized_face(data):
     marker = current_point
     thresh = 20
     
+    
     if detect_true == 1:
         if name == 'peter':
             peter += 1
             print peter
             if peter > thresh:
                 print "Recognized Peter!"
-                speak_robot("We found Peter!")
+                if sound_sent == 0:
+                    sound_sent = 1
+                    speak_robot("We found Peter!")
+                
                 marker.color = ColorRGBA(128, 255, 0, 1)
                 markers.append(marker)
                 markers_pub.publish(markers)
@@ -187,6 +196,7 @@ def detection_thresh(points):
     global det
     global detected
     global detect_true
+    global sound_sent
 
     for newPoint in points.markers:
         current_point = newPoint
@@ -224,6 +234,7 @@ def detection_thresh(points):
 
                 #so we detected a face - let's reset the counters and ask recognizer what he sees
                 detect_true = 1     #we are indeed looking at the face - let's allow recognizer to start counting!
+                sound_sent = 0
                 peter = 0
                 tina = 0
                 harry = 0
@@ -239,7 +250,7 @@ def detection_thresh(points):
             pass
 
 
-def voice_action:
+def voice_action(data):
     print "You said: "+data.data
 
     #now do sth with that data!
@@ -275,7 +286,7 @@ def face_recognizer():
     global voice_pub
     rospy.init_node('face_recognizer', anonymous=True)
     markers_pub = rospy.Publisher('recognizer/face_marker', MarkerArray)
-    voice_pub = rospy.Publisher('/robotsound', SoundRequest, queue_size=1)v
+    voice_pub = rospy.Publisher('/robotsound', SoundRequest, queue_size=1)
     rospy.Subscriber('facedetector/markers', MarkerArray, detection_thresh)
     rospy.Subscriber('face_recognizer/face', String, recognized_face)
     rospy.Subscriber("/command", String, voice_action)
