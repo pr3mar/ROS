@@ -35,6 +35,7 @@ def recognized_face(data):
 
     name = data.data
     print name
+    print peter
     
     markers = []
     marker = Marker()
@@ -42,35 +43,46 @@ def recognized_face(data):
 
     if name == 'peter':
         peter += 1
+        print peter
         marker.color = ColorRGBA(128, 255, 0, 1)
+        if peter > 50:
+            markers.append(marker)
+            markers_pub.publish(markers)
+
     elif name == 'tina':
         tina += 1
+        print tina
         marker.color = ColorRGBA(51, 51, 255, 1)
     elif name == 'harry':
         harry += 1
+        print harry
         marker.color = ColorRGBA(255, 0, 0, 1)
     elif name == 'forest':
         forest += 1
+        print forest
         marker.color = ColorRGBA(255, 128, 0, 1)
     elif name == 'filip':
         filip += 1
+        print filip
         marker.color = ColorRGBA(102, 51, 0, 1)
     elif name == 'kim':
         kim += 1
+        print kim
         marker.color = ColorRGBA(153, 0, 153, 1)
     elif name == 'matthew':
         matthew += 1
+        print matthew
         marker.color = ColorRGBA(255, 255, 0, 1)
     elif name == 'scarlett':
         scarlett += 1
+        print scarlett
         marker.color = ColorRGBA(255, 0, 127, 1)
     elif name == 'ellen':
         ellen += 1
+        print ellen
         marker.color = ColorRGBA(0, 255, 255, 1)
     
-    markers.append(marker)
-    markers_pub.publish(markers)
-
+    
 
 def detection_thresh(points):
     global peter
