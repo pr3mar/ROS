@@ -5,6 +5,7 @@ from std_msgs.msg import String, ColorRGBA
 from geometry_msgs.msg import *
 from visualization_msgs.msg import Marker, MarkerArray
 
+voice_pub = None
 markers_pub = None
 current_point = None
 det = {}
@@ -19,6 +20,58 @@ kim = 0
 matthew = 0
 scarlett = 0
 ellen = 0
+
+def min_distance_all(tokens, find):
+    name = None
+    original = None
+    min_dist = 100
+    min_index = None
+    for index, i in enumerate(tokens):
+        for j in find:
+            distance = edit_distance(i, j, transpositions=False)
+            if distance < min_dist:
+                min_dist = distance
+                min_index = index
+                name = j
+                original = i
+
+    if min_dist > 4:
+        return None, 0
+
+    print "Name we are looking for: %s. It is similar to: %s"%(name, original)
+    return  name, min_index
+
+
+
+def min_distance_one(original, find):
+    #check the colour and name
+
+    if original == None:
+        return None
+
+    new = None
+    min_dist = 100
+    for j in find:
+        distance = edit_distance(original, j, transpositions=False)
+        if distance < min_dist:
+            min_dist = distance
+            new = j
+
+    print "Name we are looking for: %s. It is similar to: %s"%(new, original)
+    return  new
+
+
+def speak_robot(str_speech):
+    #this doesnt work the first time - nobody knows why???
+    print str_speech
+    tmp = SoundRequest()
+    tmp.sound = -3
+    tmp.command = 1
+    tmp.arg = str_speech
+    tmp.arg2 = ''
+
+    global voice_pub
+    voice_pub.publish(tmp)
 
 
 def recognized_face(data):
@@ -49,6 +102,7 @@ def recognized_face(data):
             print peter
             if peter > thresh:
                 print "Recognized Peter!"
+                speak_robot("We found Peter!")
                 marker.color = ColorRGBA(128, 255, 0, 1)
                 markers.append(marker)
                 markers_pub.publish(markers)
@@ -183,13 +237,48 @@ def detection_thresh(points):
 
         else:
             pass
-    
+
+
+def voice_action:
+    print "You said: "+data.data
+
+    #now do sth with that data!
+    names = ['Peter', 'Harry', 'Tina', 'Scarlet', 'Forest', 'Kim', 'Filip', 'Matthew', 'Ellen']
+    objects = ['building']
+    streets = ['street']
+    colours = ['blue', 'yellow', 'green', 'red']
+    sentence = data.data
+
+    tokens = nltk.word_tokenize(sentence)
+    print "Tokens:\n"
+    print tokens
+
+    #first word is name
+    colour_building = None
+    colour_street = None
+    name = min_distance_one(tokens[0], names)
+
+    building = min_distance_all(tokens, objects)
+    if building[0] != None:
+        colour_building = min_distance_one(tokens[building[1]-1], colours)
+
+    street = min_distance_all(tokens, streets)
+    if street[0] != None:
+        colour_street = min_distance_one(tokens[street[1]-1], colours)
+
+    print "Mission Impossible: %s %s %s %s %s"%(name,  colour_building, building[0], colour_street, street[0])
+    speak_robot("Where would you like to go, " + name)
+
+
 def face_recognizer():
     global markers_pub
+    global voice_pub
     rospy.init_node('face_recognizer', anonymous=True)
-    rospy.Subscriber('facedetector/markers', MarkerArray, detection_thresh)
     markers_pub = rospy.Publisher('recognizer/face_marker', MarkerArray)
+    voice_pub = rospy.Publisher('/robotsound', SoundRequest, queue_size=1)v
+    rospy.Subscriber('facedetector/markers', MarkerArray, detection_thresh)
     rospy.Subscriber('face_recognizer/face', String, recognized_face)
+    rospy.Subscriber("/command", String, voice_action)
 
     rospy.spin()
 
