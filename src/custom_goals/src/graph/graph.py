@@ -6,6 +6,7 @@ import actionlib
 import random
 import math
 import priorityDictionary
+from Queue import PriorityQueue
 
 # from sensor_msgs.msg import image_encodings # do I need this?
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
@@ -108,6 +109,8 @@ class Graph:
 			# print edge
 			fr = self.getNodeByID(edge[0])
 			to = self.getNodeByID(edge[1])
+			if(fr == None or to == None):
+				raise Exception("Funny thing, no such ID")
 			to.addInEdge(fr)
 			fr.addOutEdge(to)
 
@@ -135,27 +138,93 @@ class Graph:
 			self.nodes.append(Node(goal))
 		# for node in self.nodes:
 			# node.addInEdge(random.choice(self.nodes))
-		self.defineEdges(edges)
+		try:
+			self.defineEdges(edges)
+		except Exception as e:
+			print e
 		self.printGraph()
 
-	# get a list representing the nearest path
-	def dijkstra(self, fr, to):
-		pass
+	def calcHeuristic(self, fr, to):
+		x1 = fr.goal.target_pose.pose.position.x
+		y1 = fr.goal.target_pose.pose.position.y
+		x2 = to.goal.target_pose.pose.position.x
+		y2 = to.goal.target_pose.pose.position.y
+		# print x1, y1, "; ", x2, y2, "dist = ", math.sqrt( (x2 - x1)**2 + (y2 - y1)**2 )
+		return math.sqrt( (x2 - x1)**2 + (y2 - y1)**2 )
+	
+	def minFScore(self, fScore):
+		minF = sys.maxsize
+		node = None
+		for n in fScore:
+			if fScore[n] < minF:
+				node = n
+				minF = fScore[n]
+		return node
+
+	def Astar(self, fr, to):
+		visited = set()
+		toVisit = set()
+		toVisit.add(fr)
+		path = []
+		# real value
+		gScore = {}
+		for node in self.nodes:
+			gScore[node] = sys.maxsize
+		gScore[fr] = 0
+		# heuristic value
+		fScore = {}
+		for node in self.nodes:
+			gScore[node] = sys.maxsize
+		fScore[fr] = self.calcHeuristic(fr, to)
+		print len(toVisit)
+		while len(toVisit):
+			current = self.minFScore(fScore)
+			print current
+			if current == to:
+				return self.reconstructPath(path, current)
+			toVisit.remove(current)
+			visited.add(current)
+			for out in current.outgoing:
+				if out in visited:
+					continue
+				tentative_gScore = gScore[out] + self.calcHeuristic(current, out)
+				if not(out in toVisit):
+					toVisit.add(out)
+				elif tentative_gScore >= gScore[current]:
+					continue
+				path[out] = current
+				gScore[out] = tentative_gScore
+				fScore[out] = gScore[out] + self.calcHeuristic(out, to)
+		return None
+	def reconstructPath(self, path, current):
+		total_path = [current]
+		while current in path:
+			current = path[current]
+			total_path.append(current)
+		return total_path.reverse()
 
 if __name__ == '__main__':
 	try:
 		goals = []
-		for i in range(1,5):
+		xx = [0, -2, 0, 2, 1, -1]
+		yy = [0, 1, 1, 1, 2, 4]
+		for i in range(0,6):
 			goal = MoveBaseGoal()
-			goal.target_pose.pose.position.x = i * 3
-			goal.target_pose.pose.position.y = 2 * i
+			goal.target_pose.pose.position.x = xx[i]#random.randrange(0, 20)
+			goal.target_pose.pose.position.y = yy[i]#random.randrange(0, 20)
 			goals.append(goal)
-		edges = [(0, 1), (0, 2), (1, 2), (3, 1)]
+		# edges = [(0, 1), (0, 2), (0, 4), (1, 5), (2, 3), (3,6), (4, 5), (5, 6), (5, 7), (6, 8), (7, 9), (8,9)]
+		edges = [(0, 1), (0, 2), (0, 3), (1, 2), (1, 5), (2, 4), (3, 4), (4, 5)]
 		graph = Graph(goals, edges)
 		pose = Pose()
-		pose.position.x = 7.56917
-		pose.position.y = 4.91049
-		ret = graph.localize(pose)
-		print "nearest to: ", ret[0], "distance = ", ret[1]
+		pose.position.x = xx[5]
+		pose.position.y = yy[5]
+		p1 = graph.localize(pose)
+		pose.position.x = xx[0]
+		pose.position.y = yy[0]
+		p2 = graph.localize(pose)
+		print "nearest to: ", p1[0], "distance = ", p1[1]
+		print "nearest to: ", p2[0], "distance = ", p2[1]
+		print graph.Astar(p1[0], p2[0])
 	except rospy.ROSInterruptException:
 		pass
