@@ -37,17 +37,18 @@ def recognized_face(data):
 
     name = data.data
     print name
-    print peter
     
     markers = []
     marker = Marker()
     marker = current_point
+    thresh = 50
     
     if detect_true == 1:
         if name == 'peter':
             peter += 1
             print peter
-            if peter > 100:
+            if peter > thresh:
+                print "publishing marker!"
                 marker.color = ColorRGBA(128, 255, 0, 1)
                 markers.append(marker)
                 markers_pub.publish(markers)
@@ -55,35 +56,66 @@ def recognized_face(data):
         elif name == 'tina':
             tina += 1
             print tina
-            marker.color = ColorRGBA(51, 51, 255, 1)
+            if tina > thresh:
+                marker.color = ColorRGBA(51, 51, 255, 1)
+                markers.append(marker)
+                markers_pub.publish(markers)
+                
         elif name == 'harry':
             harry += 1
             print harry
-            marker.color = ColorRGBA(255, 0, 0, 1)
+            if harry > thresh:
+                marker.color = ColorRGBA(255, 0, 0, 1)
+                markers.append(marker)
+                markers_pub.publish(markers)
+        
         elif name == 'forest':
             forest += 1
             print forest
-            marker.color = ColorRGBA(255, 128, 0, 1)
+            if forest > thresh:
+                marker.color = ColorRGBA(255, 128, 0, 1)
+                markers.append(marker)
+                markers_pub.publish(markers)
+                
         elif name == 'filip':
             filip += 1
             print filip
-            marker.color = ColorRGBA(102, 51, 0, 1)
+            if filip > thresh:
+                marker.color = ColorRGBA(102, 51, 0, 1)
+                markers.append(marker)
+                markers_pub.publish(markers)
+                
         elif name == 'kim':
             kim += 1
             print kim
-            marker.color = ColorRGBA(153, 0, 153, 1)
+            if kim > thresh:
+                marker.color = ColorRGBA(153, 0, 153, 1)
+                markers.append(marker)
+                markers_pub.publish(markers)
+                
         elif name == 'matthew':
             matthew += 1
             print matthew
-            marker.color = ColorRGBA(255, 255, 0, 1)
+            if matthew > thresh:
+                marker.color = ColorRGBA(255, 255, 0, 1)
+                markers.append(marker)
+                markers_pub.publish(markers)
+                
         elif name == 'scarlett':
             scarlett += 1
             print scarlett
-            marker.color = ColorRGBA(255, 0, 127, 1)
+            if scarlett > thresh:
+                marker.color = ColorRGBA(255, 0, 127, 1)
+                markers.append(marker)
+                markers_pub.publish(markers)
+                
         elif name == 'ellen':
             ellen += 1
             print ellen
-            marker.color = ColorRGBA(0, 255, 255, 1)
+            if ellen > thresh:
+                marker.color = ColorRGBA(0, 255, 255, 1)
+                markers.append(marker)
+                markers_pub.publish(markers)
     
     
 
@@ -136,7 +168,7 @@ def detection_thresh(points):
                 print "face " + str(detected) + " detected!!!!\n" + str(min_point)
                 print det
 
-                #so we detected a face - let's ask recognizer what he sees
+                #so we detected a face - let's reset the counters and ask recognizer what he sees
                 detect_true = 1
                 peter = 0
                 tina = 0
