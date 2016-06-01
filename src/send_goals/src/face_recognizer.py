@@ -41,14 +41,14 @@ def recognized_face(data):
     markers = []
     marker = Marker()
     marker = current_point
-    thresh = 50
+    thresh = 20
     
     if detect_true == 1:
         if name == 'peter':
             peter += 1
             print peter
             if peter > thresh:
-                print "publishing marker!"
+                print "Recognized Peter!"
                 marker.color = ColorRGBA(128, 255, 0, 1)
                 markers.append(marker)
                 markers_pub.publish(markers)
@@ -169,7 +169,7 @@ def detection_thresh(points):
                 print det
 
                 #so we detected a face - let's reset the counters and ask recognizer what he sees
-                detect_true = 1
+                detect_true = 1     #we are indeed looking at the face - let's allow recognizer to start counting!
                 peter = 0
                 tina = 0
                 harry = 0
