@@ -44,8 +44,8 @@ def recognized_face(data):
     if name == 'peter':
         peter += 1
         print peter
-        marker.color = ColorRGBA(128, 255, 0, 1)
         if peter > 100:
+            marker.color = ColorRGBA(128, 255, 0, 1)
             markers.append(marker)
             markers_pub.publish(markers)
 
@@ -151,7 +151,7 @@ def face_recognizer():
     rospy.init_node('face_recognizer', anonymous=True)
     rospy.Subscriber('facedetector/markers', MarkerArray, detection_thresh)
     markers_pub = rospy.Publisher('recognizer/face_marker', MarkerArray)
-    rospy.Subscriber('face_recognizer/face', String, recognized_face)
+    #rospy.Subscriber('face_recognizer/face', String, recognized_face)
 
     rospy.spin()
 
