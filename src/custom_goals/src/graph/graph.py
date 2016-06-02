@@ -152,11 +152,19 @@ class Graph:
 		# print x1, y1, "; ", x2, y2, "dist = ", math.sqrt( (x2 - x1)**2 + (y2 - y1)**2 )
 		return math.sqrt( (x2 - x1)**2 + (y2 - y1)**2 )
 	
-	def minFScore(self, fScore):
+	def minFScore(self, fScore, toVisit):
+		# print "new minFScore"
 		minF = sys.maxsize
 		node = None
+
 		for n in fScore:
+			if not(n in toVisit): 
+				# print "continue: ", n, 
+				# self.printSet(toVisit)
+				continue
+			# print "scores:", fScore[n], minF
 			if fScore[n] < minF:
+				# print "set n = ", n
 				node = n
 				minF = fScore[n]
 		return node
@@ -164,49 +172,86 @@ class Graph:
 	def Astar(self, fr, to):
 		visited = set()
 		toVisit = set()
-		toVisit.add(fr)
-		path = []
-		# real value
+		toVisit.add(str(fr.id))
+		path = {}
+		# set the scores
 		gScore = {}
-		for node in self.nodes:
-			gScore[node] = sys.maxsize
-		gScore[fr] = 0
-		# heuristic value
 		fScore = {}
 		for node in self.nodes:
-			gScore[node] = sys.maxsize
-		fScore[fr] = self.calcHeuristic(fr, to)
-		print len(toVisit)
+			gScore[str(node.id)] = sys.maxsize
+			fScore[str(node.id)] = sys.maxsize
+		# set first values
+		gScore[str(fr.id)] = 0
+		fScore[str(fr.id)] = self.calcHeuristic(fr, to)
+		# start iterating
+		iter = 0
 		while len(toVisit):
-			current = self.minFScore(fScore)
-			print current
-			if current == to:
+			# get the minimal F-score
+			current = self.minFScore(fScore, toVisit)
+			# print current
+			currentNode = self.getNodeByID(int(current))
+			# debugging info
+			if currentNode == None:
+				print "none!!!!", current
+				oidhgkjsdfg
+			# print "iter = ", iter, "current = ", current
+			# check if it the goal node, return the path
+			if current == str(to.id):
+				print "found path!!!"
 				return self.reconstructPath(path, current)
+		
+			# remove from the queue
 			toVisit.remove(current)
+			# # debug info
+			# self.printSet(toVisit)
+			# print len(toVisit)
+			# add to visited 
 			visited.add(current)
-			for out in current.outgoing:
-				if out in visited:
+			# iterate over outgoing edges
+			for out in currentNode.outgoing:
+				# get the node on the other side
+				out = out.to
+				# check if it was alredy visited
+				if str(out.id) in visited:
 					continue
-				tentative_gScore = gScore[out] + self.calcHeuristic(current, out)
-				if not(out in toVisit):
-					toVisit.add(out)
+				# get the score
+				tentative_gScore = gScore[current] + self.calcHeuristic(currentNode, out)
+				# print "tentative_gScore =", tentative_gScore
+				# check if it is in the queue
+				if not(out.id in toVisit):
+					toVisit.add(str(out.id))
+				# if the score is too high skip it
 				elif tentative_gScore >= gScore[current]:
 					continue
-				path[out] = current
-				gScore[out] = tentative_gScore
-				fScore[out] = gScore[out] + self.calcHeuristic(out, to)
+				# print "got here finally!"
+				# get the real path
+				path[str(out.id)] = current
+				gScore[str(out.id)] = tentative_gScore
+				fScore[str(out.id)] = gScore[str(out.id)] + self.calcHeuristic(out, to)
+			# debug info
+			iter += 1
+			# self.printSet(toVisit)
 		return None
+
 	def reconstructPath(self, path, current):
 		total_path = [current]
 		while current in path:
 			current = path[current]
 			total_path.append(current)
-		return total_path.reverse()
+
+		return [int(x) for x in reversed(total_path)]
+	# util
+	def printSet(self, s):
+		print "set elements = [",
+		for e in s:
+			print e + ", ",
+		print "]"
 
 if __name__ == '__main__':
 	try:
 		goals = []
-		xx = [0, -2, 0, 2, 1, -1]
+		#     0  1  2  3  4  5
+		xx = [0,-2, 0, 2, 1,-1]
 		yy = [0, 1, 1, 1, 2, 4]
 		for i in range(0,6):
 			goal = MoveBaseGoal()
@@ -217,11 +262,11 @@ if __name__ == '__main__':
 		edges = [(0, 1), (0, 2), (0, 3), (1, 2), (1, 5), (2, 4), (3, 4), (4, 5)]
 		graph = Graph(goals, edges)
 		pose = Pose()
-		pose.position.x = xx[5]
-		pose.position.y = yy[5]
-		p1 = graph.localize(pose)
 		pose.position.x = xx[0]
 		pose.position.y = yy[0]
+		p1 = graph.localize(pose)
+		pose.position.x = xx[5]
+		pose.position.y = yy[5]
 		p2 = graph.localize(pose)
 		print "nearest to: ", p1[0], "distance = ", p1[1]
 		print "nearest to: ", p2[0], "distance = ", p2[1]
