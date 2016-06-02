@@ -1,12 +1,9 @@
 #!/usr/bin/env python
-
 import roslib, sys
 import rospy
 import actionlib
 import random
 import math
-import priorityDictionary
-from Queue import PriorityQueue
 
 # from sensor_msgs.msg import image_encodings # do I need this?
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
@@ -142,7 +139,7 @@ class Graph:
 			self.defineEdges(edges)
 		except Exception as e:
 			print e
-		self.printGraph()
+		# self.printGraph()
 
 	def calcHeuristic(self, fr, to):
 		x1 = fr.goal.target_pose.pose.position.x
@@ -172,32 +169,32 @@ class Graph:
 	def Astar(self, fr, to):
 		visited = set()
 		toVisit = set()
-		toVisit.add(str(fr.id))
+		toVisit.add(fr.id)
 		path = {}
 		# set the scores
 		gScore = {}
 		fScore = {}
 		for node in self.nodes:
-			gScore[str(node.id)] = sys.maxsize
-			fScore[str(node.id)] = sys.maxsize
+			gScore[node.id] = sys.maxsize
+			fScore[node.id] = sys.maxsize
 		# set first values
-		gScore[str(fr.id)] = 0
-		fScore[str(fr.id)] = self.calcHeuristic(fr, to)
+		gScore[fr.id] = 0
+		fScore[fr.id] = self.calcHeuristic(fr, to)
 		# start iterating
 		iter = 0
 		while len(toVisit):
 			# get the minimal F-score
 			current = self.minFScore(fScore, toVisit)
 			# print current
-			currentNode = self.getNodeByID(int(current))
+			currentNode = self.getNodeByID(current)
 			# debugging info
 			if currentNode == None:
 				print "none!!!!", current
 				oidhgkjsdfg
 			# print "iter = ", iter, "current = ", current
 			# check if it the goal node, return the path
-			if current == str(to.id):
-				print "found path!!!"
+			if current == to.id:
+				# print "found path!!!"
 				return self.reconstructPath(path, current)
 		
 			# remove from the queue
@@ -210,24 +207,25 @@ class Graph:
 			# iterate over outgoing edges
 			for out in currentNode.outgoing:
 				# get the node on the other side
-				out = out.to
+				outNode = out.to
+				outID = outNode.id
 				# check if it was alredy visited
-				if str(out.id) in visited:
+				if outID in visited:
 					continue
 				# get the score
-				tentative_gScore = gScore[current] + self.calcHeuristic(currentNode, out)
+				tentative_gScore = gScore[current] + self.calcHeuristic(currentNode, outNode)
 				# print "tentative_gScore =", tentative_gScore
 				# check if it is in the queue
-				if not(out.id in toVisit):
-					toVisit.add(str(out.id))
+				if not(outID in toVisit):
+					toVisit.add(outID)
 				# if the score is too high skip it
 				elif tentative_gScore >= gScore[current]:
 					continue
 				# print "got here finally!"
 				# get the real path
-				path[str(out.id)] = current
-				gScore[str(out.id)] = tentative_gScore
-				fScore[str(out.id)] = gScore[str(out.id)] + self.calcHeuristic(out, to)
+				path[outID] = current
+				gScore[outID] = tentative_gScore
+				fScore[outID] = gScore[outID] + self.calcHeuristic(outNode, to)
 			# debug info
 			iter += 1
 			# self.printSet(toVisit)
@@ -237,14 +235,15 @@ class Graph:
 		total_path = [current]
 		while current in path:
 			current = path[current]
-			total_path.append(current)
-
-		return [int(x) for x in reversed(total_path)]
+			# total_path.append(current)
+			total_path = [current] + total_path
+		return total_path
+		# return [int(x) for x in reversed(total_path)]
 	# util
 	def printSet(self, s):
 		print "set elements = [",
 		for e in s:
-			print e + ", ",
+			print str(e) + ", ",
 		print "]"
 
 if __name__ == '__main__':
@@ -268,8 +267,8 @@ if __name__ == '__main__':
 		pose.position.x = xx[5]
 		pose.position.y = yy[5]
 		p2 = graph.localize(pose)
-		print "nearest to: ", p1[0], "distance = ", p1[1]
-		print "nearest to: ", p2[0], "distance = ", p2[1]
+		# print "nearest to: ", p1[0], "distance = ", p1[1]
+		# print "nearest to: ", p2[0], "distance = ", p2[1]
 		print graph.Astar(p1[0], p2[0])
 	except rospy.ROSInterruptException:
 		pass
