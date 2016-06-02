@@ -24,6 +24,7 @@ matthew = 0
 scarlett = 0
 ellen = 0
 sound_sent = 0
+color = None
 
 def min_distance_all(tokens, find):
     name = None
@@ -92,6 +93,7 @@ def recognized_face(data):
     global markers_pub
     global detect_true
     global sound_sent
+    global color
 
     name = data.data
     print name
@@ -99,7 +101,8 @@ def recognized_face(data):
     markers = []
     marker = Marker()
     marker = current_point
-    thresh = 20
+    thresh = 15
+    thresh_reached = False
     
     
     if detect_true == 1:
@@ -120,6 +123,10 @@ def recognized_face(data):
             tina += 1
             print tina
             if tina > thresh:
+                print "Recognized Tina!"
+                if sound_sent == 0:
+                    sound_sent = 1
+                    speak_robot("We found Tina!")
                 marker.color = ColorRGBA(51, 51, 255, 1)
                 markers.append(marker)
                 markers_pub.publish(markers)
@@ -128,6 +135,9 @@ def recognized_face(data):
             harry += 1
             print harry
             if harry > thresh:
+                if sound_sent == 0:
+                    sound_sent = 1
+                    speak_robot("We found Harry Potter, the boy who lived!")
                 marker.color = ColorRGBA(255, 0, 0, 1)
                 markers.append(marker)
                 markers_pub.publish(markers)
@@ -136,6 +146,9 @@ def recognized_face(data):
             forest += 1
             print forest
             if forest > thresh:
+                if sound_sent == 0:
+                    sound_sent = 1
+                    speak_robot("We found Forest Gump, and of course he was running!")
                 marker.color = ColorRGBA(255, 128, 0, 1)
                 markers.append(marker)
                 markers_pub.publish(markers)
@@ -144,6 +157,9 @@ def recognized_face(data):
             filip += 1
             print filip
             if filip > thresh:
+                if sound_sent == 0:
+                    sound_sent = 1
+                    speak_robot("We found Fillip!")
                 marker.color = ColorRGBA(102, 51, 0, 1)
                 markers.append(marker)
                 markers_pub.publish(markers)
@@ -152,6 +168,9 @@ def recognized_face(data):
             kim += 1
             print kim
             if kim > thresh:
+                if sound_sent == 0:
+                    sound_sent = 1
+                    speak_robot("We found Kim! Just kidding, no one finds Kim.")
                 marker.color = ColorRGBA(153, 0, 153, 1)
                 markers.append(marker)
                 markers_pub.publish(markers)
@@ -160,6 +179,9 @@ def recognized_face(data):
             matthew += 1
             print matthew
             if matthew > thresh:
+                if sound_sent == 0:
+                    sound_sent = 1
+                    speak_robot("We found Matthew!")
                 marker.color = ColorRGBA(255, 255, 0, 1)
                 markers.append(marker)
                 markers_pub.publish(markers)
@@ -168,6 +190,9 @@ def recognized_face(data):
             scarlett += 1
             print scarlett
             if scarlett > thresh:
+                if sound_sent == 0:
+                    sound_sent = 1
+                    speak_robot("We found Scarlett!")
                 marker.color = ColorRGBA(255, 0, 127, 1)
                 markers.append(marker)
                 markers_pub.publish(markers)
@@ -176,6 +201,9 @@ def recognized_face(data):
             ellen += 1
             print ellen
             if ellen > thresh:
+                if sound_sent == 0:
+                    sound_sent = 1
+                    speak_robot("We found Ellen and it was quite a show!")
                 marker.color = ColorRGBA(0, 255, 255, 1)
                 markers.append(marker)
                 markers_pub.publish(markers)
