@@ -12,6 +12,7 @@ from geometry_msgs.msg import *
 
 #Edge class presents an edge/arc/connection in the graph
 class Edge:
+	# set edge cost
 	def calcDist(self):
 		x1 = self.fr.goal.target_pose.pose.position.x
 		y1 = self.fr.goal.target_pose.pose.position.y
@@ -20,9 +21,15 @@ class Edge:
 		# print x1, y1, "; ", x2, y2, "dist = ", math.sqrt( (x2 - x1)**2 + (y2 - y1)**2 )
 		return math.sqrt( (x2 - x1)**2 + (y2 - y1)**2 )
 
+	def __eq__(self, other):
+		if isinstance(other, Edge):
+			return self.to.id == other.to.id and self.fr.id == other.fr.id
+		return NotImplemented
+	# to String override
 	def __str__(self):
 		return str("from: " + str(self.fr) + ", to: " + str(self.to))
 
+	# constructor
 	def __init__(self, fr, to, typ):
 		self.fr = fr
 		self.to = to
@@ -31,16 +38,10 @@ class Edge:
 
 #Node class presents a node in the graph
 class Node:
+	# static variable to determine the ID of each node of the graph
 	node = 0
-	# def addInEdge(self, newIn):
-	# 	if not(newIn in self.ingoing):
-	# 		self.ingoing.add(newIn)
-	# 		newIn.addOutEdge(self)
 
-	# def addOutEdge(self, newOut):
-	# 	if not(newOut in self.outgoing):
-	# 		self.outgoing.add(newOut)
-	# 		newOut.addInEdge(self)
+	# checks if an edge already exists
 	def check(self, node, typ):
 		if typ:
 			for el in self.ingoing:
@@ -52,20 +53,41 @@ class Node:
 					return False
 		return True
 
-
+	# add an ingoing edge, at the same time adds an outgoing edge in node
 	def addInEdge(self, node):
 		if(self.check(node, True)):
 			self.ingoing.append(Edge(node, self, True))
 			node.addOutEdge(self)
 
+	# add an outgoing edge, at the same time adds an ingoing edge in node
 	def addOutEdge(self, node):
 		if(self.check(node, False)):
 			self.outgoing.append(Edge(self, node, False))
 			node.addInEdge(self)
 
-	def getDegree(self):
-		return (len(self.ingoing) + len(self.outgoing) )
+	# remove an ingoing edge, at the same time removes an outgoing edge in node
+	def removeInEdge(self, node):
+		e = Edge(node, self, True)
+		if e in self.ingoing:
+			self.ingoing.remove(e)
+			node.removeOutEdge(self)
 
+	# remove an outgoing edge, at the same time removes an ingoing edge in node
+	def removeOutEdge(self, node):
+		e = Edge(self, node, False)
+		if e in self.outgoing:
+			self.outgoing.remove(e)
+			node.removeInEdge(self)
+
+	# get the degree of the node len(ingoing) + len(outgoing) edges
+	def getDegree(self):
+		return (len(self.ingoing) + len(self.outgoing))
+
+	# gets a string representation of the coordinates
+	def getCoords(self):
+		return "x = " + str(self.goal.target_pose.pose.position.x) + \
+					", y = " + str(self.goal.target_pose.pose.position.y) 
+	# constructor
 	def __init__(self, goal):
 		self.goal = goal
 		self.ingoing = []
@@ -73,16 +95,14 @@ class Node:
 		self.id = Node.node
 		Node.node += 1
 
-	def getCoords(self):
-		return "x = " + str(self.goal.target_pose.pose.position.x) + \
-					", y = " + str(self.goal.target_pose.pose.position.y) 
-
-
+	# to string override
 	def __str__(self):
 		return str(self.id)
 
 #main graph class
 class Graph:
+
+	# prints the graph: every node with all ingoing and outgoing edges
 	def printGraph(self):
 		for el in self.nodes:
 			print "current:", el, ", has degree =", el.getDegree(), \
@@ -95,15 +115,17 @@ class Graph:
 				print x, "(dist = ", x.cost,"); ",
 			print "\n"
 
+	# gets the node by its ID
 	def getNodeByID(self, id):
 		for node in self.nodes:
 			if(node.id == id):
 				return node
 		return None
 
+	# defines the edges between the nodes of the graph
 	def defineEdges(self, edges):
-		for edge in edges:
-			# print edge
+		self.edges = list( set(self.edges) | set(edges))
+		for edge in self.edges:
 			fr = self.getNodeByID(edge[0])
 			to = self.getNodeByID(edge[1])
 			if(fr == None or to == None):
@@ -111,6 +133,19 @@ class Graph:
 			to.addInEdge(fr)
 			fr.addOutEdge(to)
 
+	def removeEdge(self, toRemove):
+		try:
+			(frID, toID) = self.edges[self.edges.index(toRemove)]
+			self.edges.remove(toRemove)
+			frNode = self.getNodeByID(frID)
+			toNode = self.getNodeByID(toID)
+			frNode.removeOutEdge(toNode)
+			# toNode.removeOutEdge(frNode)
+			return True
+		except ValueError as e:
+			print e
+			return False
+	# along with localize
 	def calcDist(self, pose, node):
 		x1 = pose.position.x
 		y1 = pose.position.y
@@ -119,6 +154,8 @@ class Graph:
 		# print x1, y1, "; ", x2, y2, "dist = ", math.sqrt( (x2 - x1)**2 + (y2 - y1)**2 )
 		return math.sqrt( (x2 - x1) ** 2 + (y2 - y1) ** 2 )
 
+	# method to determine the nearest node in the graph 
+	# w.r.t. the current position of the roomba
 	def localize(self, pose):
 		minDist = sys.maxsize
 		minNode = None
@@ -129,18 +166,7 @@ class Graph:
 				minNode = node
 		return (minNode, minDist)
 
-	def __init__(self, goals, edges):
-		self.nodes = []
-		for goal in goals:
-			self.nodes.append(Node(goal))
-		# for node in self.nodes:
-			# node.addInEdge(random.choice(self.nodes))
-		try:
-			self.defineEdges(edges)
-		except Exception as e:
-			print e
-		# self.printGraph()
-
+	# used by Astar
 	def calcHeuristic(self, fr, to):
 		x1 = fr.goal.target_pose.pose.position.x
 		y1 = fr.goal.target_pose.pose.position.y
@@ -149,23 +175,19 @@ class Graph:
 		# print x1, y1, "; ", x2, y2, "dist = ", math.sqrt( (x2 - x1)**2 + (y2 - y1)**2 )
 		return math.sqrt( (x2 - x1)**2 + (y2 - y1)**2 )
 	
+	# used by Astar
 	def minFScore(self, fScore, toVisit):
-		# print "new minFScore"
 		minF = sys.maxsize
 		node = None
-
 		for n in fScore:
 			if not(n in toVisit): 
-				# print "continue: ", n, 
-				# self.printSet(toVisit)
 				continue
-			# print "scores:", fScore[n], minF
 			if fScore[n] < minF:
-				# print "set n = ", n
 				node = n
 				minF = fScore[n]
 		return node
 
+	# find the shortest path
 	def Astar(self, fr, to):
 		visited = set()
 		toVisit = set()
@@ -181,32 +203,24 @@ class Graph:
 		gScore[fr.id] = 0
 		fScore[fr.id] = self.calcHeuristic(fr, to)
 		# start iterating
-		iter = 0
 		while len(toVisit):
 			# get the minimal F-score
 			current = self.minFScore(fScore, toVisit)
-			# print current
 			currentNode = self.getNodeByID(current)
 			# debugging info
 			if currentNode == None:
 				print "none!!!!", current
 				oidhgkjsdfg
-			# print "iter = ", iter, "current = ", current
-			# check if it the goal node, return the path
+			# check if it the goal node, return the path start -> end
 			if current == to.id:
-				# print "found path!!!"
-				return self.reconstructPath(path, current)
-		
-			# remove from the queue
+				return self.reconstructPath(path, current)		
+			# remove the current node from the queue of nodes to be visited
 			toVisit.remove(current)
-			# # debug info
-			# self.printSet(toVisit)
-			# print len(toVisit)
 			# add to visited 
 			visited.add(current)
-			# iterate over outgoing edges
-			for out in currentNode.outgoing:
-				# get the node on the other side
+			# iterate over outgoing edges of the current node
+			for out in currentNode.outgoing: # out is instance of Edge class
+				# get the node on the other side of the edge
 				outNode = out.to
 				outID = outNode.id
 				# check if it was alredy visited
@@ -214,61 +228,77 @@ class Graph:
 					continue
 				# get the score
 				tentative_gScore = gScore[current] + self.calcHeuristic(currentNode, outNode)
-				# print "tentative_gScore =", tentative_gScore
 				# check if it is in the queue
 				if not(outID in toVisit):
 					toVisit.add(outID)
 				# if the score is too high skip it
 				elif tentative_gScore >= gScore[current]:
 					continue
-				# print "got here finally!"
-				# get the real path
+				# set a path to this node, the heuristic and real cost
 				path[outID] = current
 				gScore[outID] = tentative_gScore
 				fScore[outID] = gScore[outID] + self.calcHeuristic(outNode, to)
-			# debug info
-			iter += 1
-			# self.printSet(toVisit)
+		# this means the algorithm did not find a path for some reason.
 		return None
 
+	# gets the path
 	def reconstructPath(self, path, current):
 		total_path = [current]
 		while current in path:
 			current = path[current]
-			# total_path.append(current)
 			total_path = [current] + total_path
 		return total_path
-		# return [int(x) for x in reversed(total_path)]
-	# util
+
+	# utils:
 	def printSet(self, s):
 		print "set elements = [",
 		for e in s:
 			print str(e) + ", ",
 		print "]"
 
+	def __init__(self, goals, edges):
+		self.nodes = []
+		for goal in goals:
+			self.nodes.append(Node(goal))
+		self.edges = []
+		try:
+			self.defineEdges(edges)
+		except Exception as e:
+			print e
+
 if __name__ == '__main__':
 	try:
-		goals = []
-		#     0  1  2  3  4  5
-		xx = [0,-2, 0, 2, 1,-1]
-		yy = [0, 1, 1, 1, 2, 4]
-		for i in range(0,6):
-			goal = MoveBaseGoal()
-			goal.target_pose.pose.position.x = xx[i]#random.randrange(0, 20)
-			goal.target_pose.pose.position.y = yy[i]#random.randrange(0, 20)
-			goals.append(goal)
-		# edges = [(0, 1), (0, 2), (0, 4), (1, 5), (2, 3), (3,6), (4, 5), (5, 6), (5, 7), (6, 8), (7, 9), (8,9)]
-		edges = [(0, 1), (0, 2), (0, 3), (1, 2), (1, 5), (2, 4), (3, 4), (4, 5)]
-		graph = Graph(goals, edges)
-		pose = Pose()
-		pose.position.x = xx[0]
-		pose.position.y = yy[0]
-		p1 = graph.localize(pose)
-		pose.position.x = xx[5]
-		pose.position.y = yy[5]
-		p2 = graph.localize(pose)
-		# print "nearest to: ", p1[0], "distance = ", p1[1]
-		# print "nearest to: ", p2[0], "distance = ", p2[1]
-		print graph.Astar(p1[0], p2[0])
+		test = True
+		if test:
+			# solely for testing purposes:
+			goals = []
+			#ids: 0  1  2  3  4  5
+			xx = [0,-2, 0, 2, 1,-1]
+			yy = [0, 1, 1, 1, 2, 4]
+			for i in range(0,6):
+				goal = MoveBaseGoal()
+				goal.target_pose.pose.position.x = xx[i]#random.randrange(0, 20)
+				goal.target_pose.pose.position.y = yy[i]#random.randrange(0, 20)
+				goals.append(goal)
+			# edges = [(0, 1), (0, 2), (0, 4), (1, 5), (2, 3), (3,6), (4, 5), (5, 6), (5, 7), (6, 8), (7, 9), (8,9)]
+			edges = [(0, 1), (0, 2), (0, 3), (1, 2), (1, 5), (2, 4), (3, 4), (4, 5)]
+			graph = Graph(goals, edges)
+			# graph.printGraph()
+			pose = Pose()
+			pose.position.x = xx[0]
+			pose.position.y = yy[0]
+			p1 = graph.localize(pose)
+			pose.position.x = xx[5]
+			pose.position.y = yy[5]
+			p2 = graph.localize(pose)
+			print "removed = ", graph.removeEdge((2,4))
+			# print "nearest to: ", p1[0], "distance = ", p1[1]
+			# print "nearest to: ", p2[0], "distance = ", p2[1]
+			print graph.Astar(p1[0], p2[0])
+			graph.defineEdges([(2,4)])
+			print graph.Astar(p1[0], p2[0])
+			# graph.printGraph()
+		else: # TODO: make it work with ROS
+			pass
 	except rospy.ROSInterruptException:
 		pass
