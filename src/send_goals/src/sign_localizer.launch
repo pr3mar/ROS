@@ -1,0 +1,16 @@
+<launch>
+
+  <include file="$(find turtlebot_bringup)/launch/3dsensor.launch" />
+
+  <include file="$(find dlib_detector)/launch/traffic_sign_detector_camera.launch">
+	<arg name="image_topic" value="/camera/rgb/image_color" />
+  </include>
+
+  <include file="$(find localizer)/launch/localizer_node.launch" />
+
+  <node pkg="localizer" type="mapper" name="sign_localizer" output="screen">
+    <remap from="detections" to="/detector/traffic_signs" />
+    <remap from="camera_info" to="/camera/rgb/camera_info" />
+  </node>
+
+</launch>
