@@ -1,0 +1,72 @@
+current: 0 , has degree = 2 , coords = x = 8.32, y = -2.2
+ingoing  =  from: 1, to: 0 (dist =  0.715681493403 );  
+outgoing =  from: 0, to: 1 (dist =  0.715681493403 );  
+
+current: 1 , has degree = 4 , coords = x = 7.61, y = -2.29
+ingoing  =  from: 2, to: 1 (dist =  0.891066776398 );  from: 0, to: 1 (dist =  0.715681493403 );  
+outgoing =  from: 1, to: 0 (dist =  0.715681493403 );  from: 1, to: 2 (dist =  0.891066776398 );  
+
+current: 2 , has degree = 4 , coords = x = 7.47, y = -1.41
+ingoing  =  from: 3, to: 2 (dist =  1.37767920794 );  from: 1, to: 2 (dist =  0.891066776398 );  
+outgoing =  from: 2, to: 1 (dist =  0.891066776398 );  from: 2, to: 3 (dist =  1.37767920794 );  
+
+current: 3 , has degree = 6 , coords = x = 7.15, y = -0.07
+ingoing  =  from: 17, to: 3 (dist =  0.930859817588 );  from: 2, to: 3 (dist =  1.37767920794 );  from: 4, to: 3 (dist =  0.776466354712 );  
+outgoing =  from: 3, to: 2 (dist =  1.37767920794 );  from: 3, to: 17 (dist =  0.930859817588 );  from: 3, to: 4 (dist =  0.776466354712 );  
+
+current: 4 , has degree = 4 , coords = x = 7.05, y = 0.7
+ingoing  =  from: 5, to: 4 (dist =  0.802246844805 );  from: 3, to: 4 (dist =  0.776466354712 );  
+outgoing =  from: 4, to: 5 (dist =  0.802246844805 );  from: 4, to: 3 (dist =  0.776466354712 );  
+
+current: 5 , has degree = 4 , coords = x = 6.99, y = 1.5
+ingoing  =  from: 4, to: 5 (dist =  0.802246844805 );  from: 6, to: 5 (dist =  0.851586754242 );  
+outgoing =  from: 5, to: 6 (dist =  0.851586754242 );  from: 5, to: 4 (dist =  0.802246844805 );  
+
+current: 6 , has degree = 4 , coords = x = 6.15, y = 1.36
+ingoing  =  from: 5, to: 6 (dist =  0.851586754242 );  from: 7, to: 6 (dist =  0.996393496566 );  
+outgoing =  from: 6, to: 7 (dist =  0.996393496566 );  from: 6, to: 5 (dist =  0.851586754242 );  
+
+current: 7 , has degree = 4 , coords = x = 5.17, y = 1.18
+ingoing  =  from: 8, to: 7 (dist =  1.05721331812 );  from: 6, to: 7 (dist =  0.996393496566 );  
+outgoing =  from: 7, to: 6 (dist =  0.996393496566 );  from: 7, to: 8 (dist =  1.05721331812 );  
+
+current: 8 , has degree = 6 , coords = x = 4.13, y = 0.99
+ingoing  =  from: 9, to: 8 (dist =  1.09 );  from: 15, to: 8 (dist =  0.676017751246 );  from: 7, to: 8 (dist =  1.05721331812 );  
+outgoing =  from: 8, to: 7 (dist =  1.05721331812 );  from: 8, to: 9 (dist =  1.09 );  from: 8, to: 15 (dist =  0.676017751246 );  
+
+current: 9 , has degree = 4 , coords = x = 3.04, y = 0.99
+ingoing  =  from: 8, to: 9 (dist =  1.09 );  from: 10, to: 9 (dist =  0.940212741883 );  
+outgoing =  from: 9, to: 8 (dist =  1.09 );  from: 9, to: 10 (dist =  0.940212741883 );  
+
+current: 10 , has degree = 4 , coords = x = 2.1, y = 0.97
+ingoing  =  from: 11, to: 10 (dist =  0.715681493403 );  from: 9, to: 10 (dist =  0.940212741883 );  
+outgoing =  from: 10, to: 11 (dist =  0.715681493403 );  from: 10, to: 9 (dist =  0.940212741883 );  
+
+current: 11 , has degree = 4 , coords = x = 2.19, y = 0.26
+ingoing  =  from: 10, to: 11 (dist =  0.715681493403 );  from: 12, to: 11 (dist =  0.893588272081 );  
+outgoing =  from: 11, to: 10 (dist =  0.715681493403 );  from: 11, to: 12 (dist =  0.893588272081 );  
+
+current: 12 , has degree = 4 , coords = x = 2.11, y = -0.63
+ingoing  =  from: 13, to: 12 (dist =  0.980815986819 );  from: 11, to: 12 (dist =  0.893588272081 );  
+outgoing =  from: 12, to: 13 (dist =  0.980815986819 );  from: 12, to: 11 (dist =  0.893588272081 );  
+
+current: 13 , has degree = 4 , coords = x = 3.09, y = -0.59
+ingoing  =  from: 12, to: 13 (dist =  0.980815986819 );  from: 14, to: 13 (dist =  1.02259473889 );  
+outgoing =  from: 13, to: 12 (dist =  0.980815986819 );  from: 13, to: 14 (dist =  1.02259473889 );  
+
+current: 14 , has degree = 6 , coords = x = 4.1, y = -0.43
+ingoing  =  from: 16, to: 14 (dist =  1.26696487718 );  from: 15, to: 14 (dist =  0.752396172239 );  from: 13, to: 14 (dist =  1.02259473889 );  
+outgoing =  from: 14, to: 13 (dist =  1.02259473889 );  from: 14, to: 16 (dist =  1.26696487718 );  from: 14, to: 15 (dist =  0.752396172239 );  
+
+current: 15 , has degree = 4 , coords = x = 4.04, y = 0.32
+ingoing  =  from: 8, to: 15 (dist =  0.676017751246 );  from: 14, to: 15 (dist =  0.752396172239 );  
+outgoing =  from: 15, to: 8 (dist =  0.676017751246 );  from: 15, to: 14 (dist =  0.752396172239 );  
+
+current: 16 , has degree = 4 , coords = x = 5.34, y = -0.17
+ingoing  =  from: 17, to: 16 (dist =  0.882043082848 );  from: 14, to: 16 (dist =  1.26696487718 );  
+outgoing =  from: 16, to: 14 (dist =  1.26696487718 );  from: 16, to: 17 (dist =  0.882043082848 );  
+
+current: 17 , has degree = 4 , coords = x = 6.22, y = -0.11
+ingoing  =  from: 3, to: 17 (dist =  0.930859817588 );  from: 16, to: 17 (dist =  0.882043082848 );  
+outgoing =  from: 17, to: 3 (dist =  0.930859817588 );  from: 17, to: 16 (dist =  0.882043082848 );  
+

@@ -1,0 +1,179 @@
+#!/usr/bin/env python
+
+import roslib, sys
+import rospy
+import actionlib
+import random
+import math
+from graph.graph import Graph
+
+# from sensor_msgs.msg import image_encodings # do I need this?
+from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal, MoveBaseActionGoal
+from actionlib_msgs.msg import GoalStatusArray
+from geometry_msgs.msg import *
+
+goals = []
+graph = None
+al = None
+
+def sendGoals(): # subscribe to /amcl_pose to get the exact pose at the moment
+	# graph.printGraph() # just a test if graph is set
+	al = actionlib.SimpleActionClient("move_base/current_goal", MoveBaseAction)
+	# al.start()
+	al.wait_for_server()
+	for node in graph.nodes:
+		goal = MoveBaseActionGoal()
+		goal.goal = node.goal
+		print goal
+		al.send_goal(goal)
+		al.wait_for_result(rospy.Duration.from_sec(5.0))
+		# print al.getState()
+
+def send():
+	pass
+
+if __name__ == '__main__':
+	rospy.init_node('graph_send_goals')
+	try:
+		test = False
+		if test:
+			# solely for testing purposes:
+			goals = []
+			#ids: 0  1  2  3  4  5
+			xx = [0,-2, 0, 2, 1,-1]
+			yy = [0, 1, 1, 1, 2, 4]
+			for i in range(0,6):
+				goal = MoveBaseGoal()
+				goal.target_pose.pose.position.x = xx[i]#random.randrange(0, 20)
+				goal.target_pose.pose.position.y = yy[i]#random.randrange(0, 20)
+				goals.append(goal)
+			# edges = [(0, 1), (0, 2), (0, 4), (1, 5), (2, 3), (3,6), (4, 5), (5, 6), (5, 7), (6, 8), (7, 9), (8,9)]
+			edges = [(0, 1), (0, 2), (0, 3), (1, 2), (1, 5), (2, 4), (3, 4), (4, 5)]
+			graph = Graph(goals, edges)
+			# graph.printGraph()
+			pose = Pose()
+			pose.position.x = xx[0]
+			pose.position.y = yy[0]
+			p1 = graph.localize(pose)
+			pose.position.x = xx[5]
+			pose.position.y = yy[5]
+			p2 = graph.localize(pose)
+			print "removed = ", graph.removeEdge((2,4))
+			# print "nearest to: ", p1[0], "distance = ", p1[1]
+			# print "nearest to: ", p2[0], "distance = ", p2[1]
+			print graph.Astar(p1[0], p2[0])
+			graph.defineEdges([(2,4)])
+			print graph.Astar(p1[0], p2[0])
+			# graph.printGraph()
+		else: # TODO: make it work with ROS
+			x_coords = [ \
+				#red street
+				8.32, 7.61, 7.47,\
+
+				# yellow street
+				7.15, 7.05, 6.99,\
+
+				#blue street
+				6.15, 5.17, 4.13, 3.04, 2.10, \
+
+				#green street
+				2.19, 2.11, 3.09, 4.10, 4.04, 5.34, 6.22
+			]
+			y_coords = [ \
+				#red street
+				-2.2, -2.29, -1.41,\
+
+				# yellow street
+				-0.07, 0.70, 1.5,\
+
+				#blue street
+				1.36, 1.18, 0.99, 0.99, 0.97, \
+
+				#green street
+				0.26, -0.63, -0.59, -0.43, 0.32, -0.17, -0.11
+			]
+			colors = [ \
+				#red street
+				0, 0, 0,\
+
+				# yellow street
+				1, 1, 1,\
+
+				#blue street
+				2, 2, 2, 2, 2, \
+
+				#green street
+				3, 3, 3, 3, 3, 3, 3
+			]
+			goals = []
+			for i in range(len(x_coords)):
+				goal = MoveBaseGoal()
+				goal.target_pose.header.
+				goal.target_pose.header.frame_id = "map"
+				goal.target_pose.pose.position.x = x_coords[i]#random.randrange(0, 20)
+				goal.target_pose.pose.position.y = y_coords[i]#random.randrange(0, 20)
+				goals.append(goal)
+			edges = [
+				(0, 1),
+				(1, 0), (1, 2),
+				(2, 1), (2, 3),
+				(3, 2), (3, 4), (3, 17),
+				(4, 3), (4, 5),
+				(5, 4), (5, 6),
+				(6, 5), (6, 7),
+				(7, 6), (7, 8),
+				(8, 7), (8, 9), (8, 15),
+				(9, 8), (9, 10),
+				(10, 9), (10, 11),
+				(11, 10), (11, 12),
+				(12, 11), (12, 13),
+				(13, 12), (13, 14),
+				(14, 13), (14, 15), (14, 16),
+				(15, 8), (15, 14),
+				(16, 14), (16, 17),
+				(17, 3), (17, 16)
+			]
+			graph = Graph(goals, edges)
+			# graph.printGraph()
+			# p2 = graph.localize(pose)
+			# print "removed = ", graph.removeEdge((14,16))
+			# print "removed = ", graph.removeEdge((3, 4))
+			# graph.printGraph()
+			# print rospy.get_name()
+			sendGoals()
+			# rospy.spin()
+
+	except rospy.ROSInterruptException:
+		pass
+
+# list of dots on the map:
+# red street:
+#   x    y
+# 8.32, -2.2
+# 7.61, -2.29
+# 7.47, -1.41
+#
+# yellow street:
+#  x     y
+# 7.15, -0.07
+# 7.05, 0.70
+# 6.99, 1.5
+#
+# blue street:
+#   x    y
+# 6.15, 1.36
+# 5.17, 1.18
+# 4.13, 0.99
+# 3.04, 0.99
+# 2.10, 0.97
+#
+# green street:
+#   x    y
+# 2.19, 0.26
+# 2.11, -0.63
+# 3.09, -0.59
+# 4.10, -0.43
+# 4.04, 0.32
+# 5.34, -0.17
+# 6.22, -0.11
+

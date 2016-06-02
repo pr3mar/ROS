@@ -25,6 +25,7 @@ class Edge:
 		if isinstance(other, Edge):
 			return self.to.id == other.to.id and self.fr.id == other.fr.id
 		return NotImplemented
+	
 	# to String override
 	def __str__(self):
 		return str("from: " + str(self.fr) + ", to: " + str(self.to))
@@ -70,14 +71,14 @@ class Node:
 		e = Edge(node, self, True)
 		if e in self.ingoing:
 			self.ingoing.remove(e)
-			node.removeOutEdge(self)
+			# node.removeOutEdge(self)
 
 	# remove an outgoing edge, at the same time removes an ingoing edge in node
 	def removeOutEdge(self, node):
 		e = Edge(self, node, False)
 		if e in self.outgoing:
 			self.outgoing.remove(e)
-			node.removeInEdge(self)
+			# node.removeInEdge(self)
 
 	# get the degree of the node len(ingoing) + len(outgoing) edges
 	def getDegree(self):
@@ -145,6 +146,7 @@ class Graph:
 		except ValueError as e:
 			print e
 			return False
+
 	# along with localize
 	def calcDist(self, pose, node):
 		x1 = pose.position.x
@@ -265,40 +267,3 @@ class Graph:
 			self.defineEdges(edges)
 		except Exception as e:
 			print e
-
-if __name__ == '__main__':
-	try:
-		test = True
-		if test:
-			# solely for testing purposes:
-			goals = []
-			#ids: 0  1  2  3  4  5
-			xx = [0,-2, 0, 2, 1,-1]
-			yy = [0, 1, 1, 1, 2, 4]
-			for i in range(0,6):
-				goal = MoveBaseGoal()
-				goal.target_pose.pose.position.x = xx[i]#random.randrange(0, 20)
-				goal.target_pose.pose.position.y = yy[i]#random.randrange(0, 20)
-				goals.append(goal)
-			# edges = [(0, 1), (0, 2), (0, 4), (1, 5), (2, 3), (3,6), (4, 5), (5, 6), (5, 7), (6, 8), (7, 9), (8,9)]
-			edges = [(0, 1), (0, 2), (0, 3), (1, 2), (1, 5), (2, 4), (3, 4), (4, 5)]
-			graph = Graph(goals, edges)
-			# graph.printGraph()
-			pose = Pose()
-			pose.position.x = xx[0]
-			pose.position.y = yy[0]
-			p1 = graph.localize(pose)
-			pose.position.x = xx[5]
-			pose.position.y = yy[5]
-			p2 = graph.localize(pose)
-			print "removed = ", graph.removeEdge((2,4))
-			# print "nearest to: ", p1[0], "distance = ", p1[1]
-			# print "nearest to: ", p2[0], "distance = ", p2[1]
-			print graph.Astar(p1[0], p2[0])
-			graph.defineEdges([(2,4)])
-			print graph.Astar(p1[0], p2[0])
-			# graph.printGraph()
-		else: # TODO: make it work with ROS
-			pass
-	except rospy.ROSInterruptException:
-		pass
