@@ -315,7 +315,7 @@ def face_recognizer():
     rospy.init_node('face_recognizer', anonymous=True)
     markers_pub = rospy.Publisher('recognizer/face_marker', MarkerArray)
     voice_pub = rospy.Publisher('/robotsound', SoundRequest, queue_size=1)
-    rospy.Subscriber('facedetector/markers', MarkerArray, detection_thresh)
+    rospy.Subscriber('pcl/transformedMarkers', MarkerArray, detection_thresh)
     rospy.Subscriber('face_recognizer/face', String, recognized_face)
     rospy.Subscriber("/command", String, voice_action)
 
