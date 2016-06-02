@@ -104,6 +104,7 @@ def recognized_face(data):
     thresh = 15
     thresh_reached = False
     
+    # TO-DO: stop voting once the thresh is reached!
     
     if detect_true == 1:
         if name == 'peter':
@@ -175,7 +176,7 @@ def recognized_face(data):
                 markers.append(marker)
                 markers_pub.publish(markers)
                 
-        elif name == 'matthew':
+        elif name == 'mathew':
             matthew += 1
             print matthew
             if matthew > thresh:
