@@ -13,7 +13,7 @@ from geometry_msgs.msg import *
 #Edge class presents an edge/arc/connection in the graph
 class Edge:
 	# set edge cost
-	def calcDist(self):
+	def calcCost(self):
 		x1 = self.fr.goal.target_pose.pose.position.x
 		y1 = self.fr.goal.target_pose.pose.position.y
 		x2 = self.to.goal.target_pose.pose.position.x
@@ -35,7 +35,7 @@ class Edge:
 		self.fr = fr
 		self.to = to
 		self.type = typ # type = {true, false} -> True == ingoing, False == outgoing
-		self.cost = self.calcDist()
+		self.cost = self.calcCost()
 
 #Node class presents a node in the graph
 class Node:
@@ -252,6 +252,21 @@ class Graph:
 			total_path = [current] + total_path
 		return total_path
 
+	# get nodes by color
+	def getByColor(self, color):
+		ret = []
+		for node in self.nodes:
+			if node.color == color:
+				ret.append(node.id)
+		return ret
+	def getByColorSorted(self, pose, color):
+		colorNodes = self.getByColor(color)
+		ret = []
+		for nodeID in colorNodes:
+			node = self.getNodeByID(nodeID)
+			ret.append((node, self.calcDist(pose, node)))
+		return sorted(ret, key=lambda x: x[1])
+
 	# utils:
 	def printSet(self, s):
 		print "set elements = [",
@@ -259,16 +274,7 @@ class Graph:
 			print str(e) + ", ",
 		print "]"
 
-	# def __init__(self, goals, edges):
-	# 	self.nodes = []
-	# 	for goal in goals:
-	# 		self.nodes.append(Node(goal))
-	# 	self.edges = []
-	# 	try:
-	# 		self.defineEdges(edges)
-	# 	except Exception as e:
-	# 		print e
-
+	# constructor
 	def __init__(self, goals, edges, colors=None):
 		self.nodes = []
 		for i in range(len(goals)):

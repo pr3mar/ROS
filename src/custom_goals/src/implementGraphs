@@ -12,42 +12,68 @@ from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal, MoveBaseActionGoal
 from actionlib_msgs.msg import GoalStatusArray
 from geometry_msgs.msg import *
 
+colorMap = {"red":0, "yellow":1, "blue":2, "green":3}
 goals = []
 graph = None
 alib = None
+currentLocation = None
+setGoal = False
 
-def sendGoals(): # subscribe to /amcl_pose to get the exact pose at the moment
+def sendAllGoals(): # subscribe to /amcl_pose to get the exact pose at the moment
 	# graph.printGraph() # just a test if graph is set
 	if(alib == None):
-		print "WTF?"
+		rospy.loginfo("WTF? Actionlib is None, sendAllGoals()")
 		return
 	i = 0
 	for node in graph.nodes:
 		rospy.loginfo("Sending goal: " + str(i))
 		goal = MoveBaseGoal()
 		stamp = rospy.Time.now()
-		# goal.header.stamp = stamp
-		# goal.header.frame_id = 'map'
-		# goal.goal_id.stamp = stamp
-		# goal.goal_id.id = 'graph_' + str(i)
 		goal = node.goal
-		# goal.target_pose.header.frame_id = '/map'
 		goal.target_pose.header.stamp = stamp
 		print goal
 		alib.send_goal(goal)
 		result = alib.wait_for_result(rospy.Duration(90.0))
 		state = alib.get_state()
 		print "result = ", result, ", state = ", state
-		# print al.getState()
 		i += 1
-		#break
 
-def send():
-	pass
+def send(goals):
+	if(alib == None):
+		rospy.loginfo("WTF? Actionlib is None, send(goals)")
+		return
+	setGoal = True
+	for nodeID in goals:
+		node = graph.getNodeByID(nodeID)
+		rospy.loginfo("Sending graph goal: " + nodeID)
+		goal = MoveBaseGoal()
+		stamp = rospy.Time.now()
+		goal = node.goal
+		goal.target_pose.header.stamp = stamp
+		print goal
+		alib.send_goal(goal)
+		result = alib.wait_for_result(rospy.Duration(90.0))
+		state = alib.get_state()
+		print "result = ", result, ", state = ", state
+		i += 1
+	# setGoal = False
+
+def localize(poseWithCov): # get data from /amcl_pose
+	nearest_node = graph.localize(poseWithCov.pose.pose)
+	currentLocation = graph.getNodeByID(nearest_node[0])
+	print "location = ", nearest_node[0], nearest_node[1]
+	# if not setGoal:
+	# 	pose = graph.nodes[4].goal.target_pose.pose
+	# 	p2 = graph.localize(pose)
+		
+	# 	path = graph.Astar(nearest_node, p2[0])
+	# 	send_goal(path)
+	# # TODO: how to return the point? Concept.
 
 if __name__ == '__main__':
 	try:
 		test = False
+		doROS = True
 		if test:
 			# solely for testing purposes:
 			goals = []
@@ -79,7 +105,7 @@ if __name__ == '__main__':
 			print graph.Astar(p1[0], p2[0])
 			graph.printGraph()
 		else: # TODO: make it work with ROS!!!!
-			rospy.init_node('graph_send_goals')
+			# init graph 
 			x_coords = [ \
 				#red street
 				8.32, 7.61, 7.47,\
@@ -149,19 +175,34 @@ if __name__ == '__main__':
 			]
 			graph = Graph(goals, edges, colors)
 			# graph.printGraph()
-			# p2 = graph.localize(pose)
-			# print "removed = ", graph.removeEdge((14,16))
-			# print "removed = ", graph.removeEdge((3, 4))
+			print "removed = ", graph.removeEdge((14,16))
+			print "removed = ", graph.removeEdge((3, 4))
 			# graph.printGraph()
 			# print rospy.get_name()
-			alib = actionlib.SimpleActionClient("move_base", MoveBaseAction)
-			print alib
-			rospy.loginfo("Waiting for the server")
-			alib.wait_for_server(rospy.Duration(5.0))
-			rospy.loginfo("Server started.")
+			pose = graph.nodes[0].goal.target_pose.pose
+			p1 = graph.localize(pose)
+			pose = graph.nodes[4].goal.target_pose.pose
+			p2 = graph.localize(pose)
 			
-			# sendGoals()
-			# rospy.spin()
+			path = graph.Astar(p1[0], p2[0])
+			#   # get all nodes by color
+			# print p2[0], p2[1]
+			# for color in colorMap:
+			# 	print color,
+			# 	for x in graph.getByColorSorted(pose, colorMap[color]):
+			# 		print "(" + str(x[0]) + ", " + str(x[1]) + ")",
+			# 	print
+
+			if doROS:
+				rospy.init_node('graph_send_goals')
+				# init the actionlib server to send goals (works only locally)
+				alib = actionlib.SimpleActionClient("move_base", MoveBaseAction)
+				rospy.loginfo("Waiting for actionlib server")
+				alib.wait_for_server(rospy.Duration(5.0))
+				rospy.loginfo("Actionlib server started.")
+				rospy.Subscriber("amcl_pose", localize, PoseWithCovarianceStamped)
+				# # sendAllGoals() # just to explore the map
+				rospy.spin()  
 
 	except rospy.ROSInterruptException:
 		pass
