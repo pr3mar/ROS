@@ -18,9 +18,10 @@ graph = None
 alib = None
 currentLocation = None
 setGoal = False
+poses_to_remove = {"3-4": [(3, 4), False], "14-16": [(14, 16), False]}
 
-def sendAllGoals(): # subscribe to /amcl_pose to get the exact pose at the moment
-	# graph.printGraph() # just a test if graph is set
+# maybe not usefull at all, just for exploring
+def sendAllGoals():
 	if(alib == None):
 		rospy.loginfo("WTF? Actionlib is None, sendAllGoals()")
 		return
@@ -36,17 +37,24 @@ def sendAllGoals(): # subscribe to /amcl_pose to get the exact pose at the momen
 		result = alib.wait_for_result(rospy.Duration(90.0))
 		state = alib.get_state()
 		print "result = ", result, ", state = ", state
+		if result and state == GoalStatus.SUCCEEDED:
+			result = True
+		else:
+			rospy.loginfo("FAILED TO REACH GOAL")
+			self.alib.cancel_goal()
 		i += 1
 
+# just a wrapper:
+# send goals to the robot, given a list of node ids
 def send(goals):
 	global setGoal
 	if setGoal:
-		rospy.loginfo("ALREADY SENT SOME GOALS")
+		rospy.loginfo("ALREADY SENDING SOME GOALS")
 		return
 	if(alib == None):
 		rospy.loginfo("WTF? Actionlib is None, send(goals)")
 		return
-	print "entered send(goals)"
+	# print "entered send(goals)"
 	setGoal = True
 	for nodeID in goals:
 		node = graph.getNodeByID(nodeID)
@@ -55,19 +63,27 @@ def send(goals):
 		stamp = rospy.Time.now()
 		goal = node.goal
 		goal.target_pose.header.stamp = stamp
-		print goal
+		# print goal
 		alib.send_goal(goal)
 		result = alib.wait_for_result(rospy.Duration(90.0))
 		state = alib.get_state()
 		print "result = ", result, ", state = ", state
-	# setGoal = False
+		if result and state == GoalStatus.SUCCEEDED:
+			result = True
+		else:
+			rospy.loginfo("FAILED TO REACH GOAL!!!")
+			alib.cancel_goal()
+	setGoal = False
 
+#localize by 
 def localize(poseWithCov): # get data from /amcl_pose
-	global setGoal
+	global setGoal, currentLocation
 	nearest_node = graph.localize(poseWithCov.pose.pose)
 	currentLocation = graph.getNodeByID(nearest_node[0])
-	#print "location = ", nearest_node[0], nearest_node[1]
-	if not setGoal:
+	# print "location = ", nearest_node[0], nearest_node[1]
+	
+	# this need to be reset somewhere else
+	if not setGoal and False: # dead code at the moment, just to test
 		rospy.loginfo("GENERATING NEW PATH!!!")
 		pose = graph.nodes[4].goal.target_pose.pose
 	 	p2 = graph.localize(pose)
@@ -76,6 +92,20 @@ def localize(poseWithCov): # get data from /amcl_pose
 	 	# print path
 	 	send(path)
 	# # TODO: how to return the point? Concept.
+
+
+# recognized sign (oneway) is situated in pose
+# find the nearest node and remove the edge
+# only works if the nearest nodes are from the predefined global poses_to_remove
+def removeEdges(pose):
+	global poses_to_remove
+	nearest_node = graph.localize(poseWithCov.pose.pose)
+	for edge in poses_to_remove:
+		if not nearest_node[1]:
+			el = poses_to_remove[edge]
+			if(nearest_node[0] == edge[0][0] || nearest_node[0] == edge[0][1]):
+				graph.removeEdge(edge[0])
+				edge[1] = True
 
 if __name__ == '__main__':
 	try:
@@ -186,12 +216,12 @@ if __name__ == '__main__':
 			print "removed = ", graph.removeEdge((3, 4))
 			# graph.printGraph()
 			# print rospy.get_name()
-			pose = graph.nodes[0].goal.target_pose.pose
-			p1 = graph.localize(pose)
-			pose = graph.nodes[4].goal.target_pose.pose
-			p2 = graph.localize(pose)
+			# pose = graph.nodes[0].goal.target_pose.pose
+			# p1 = graph.localize(pose)
+			# pose = graph.nodes[4].goal.target_pose.pose
+			# p2 = graph.localize(pose)
 			
-			path = graph.Astar(p1[0], p2[0])
+			# path = graph.Astar(p1[0], p2[0])
 			#   # get all nodes by color
 			# print p2[0], p2[1]
 			# for color in colorMap:
@@ -208,6 +238,7 @@ if __name__ == '__main__':
 				alib.wait_for_server(rospy.Duration(5.0))
 				rospy.loginfo("Actionlib server started.")
 				rospy.Subscriber("amcl_pose", PoseWithCovarianceStamped, localize)
+				# rospy.Subscriber("sign_recognition", PoseStamped, removeEdges) # TODO: really need to discuss this this!!!
 				# # sendAllGoals() # just to explore the map
 				rospy.spin()  
 
