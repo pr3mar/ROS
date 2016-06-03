@@ -10,6 +10,8 @@ from sound_play.msg import SoundRequest
 
 voice_pub = None
 markers_pub = None
+
+#faces
 current_point = None
 det = {}
 detected = 0
@@ -25,6 +27,13 @@ scarlett = 0
 ellen = 0
 sound_sent = 0
 color = None
+det_entry = None
+
+#signs
+det_signs = {}
+sign_detected = 0
+detect_sign_true = 0
+det_entry_sign = None
 
 def min_distance_all(tokens, find):
     name = None
@@ -94,6 +103,7 @@ def recognized_face(data):
     global detect_true
     global sound_sent
     global color
+    global det_entry
 
     name = data.data
     print name
@@ -106,7 +116,7 @@ def recognized_face(data):
     
     # TO-DO: stop voting once the thresh is reached!
     
-    if detect_true == 1:
+    if detect_true == 1 and det_entry['name'] == None:
         if name == 'peter':
             peter += 1
             print peter
@@ -116,6 +126,7 @@ def recognized_face(data):
                     sound_sent = 1
                     speak_robot("We found Peter!")
                 
+                det_entry['name'] = name
                 marker.color = ColorRGBA(128, 255, 0, 1)
                 markers.append(marker)
                 markers_pub.publish(markers)
@@ -128,6 +139,7 @@ def recognized_face(data):
                 if sound_sent == 0:
                     sound_sent = 1
                     speak_robot("We found Tina!")
+                det_entry['name'] = name    
                 marker.color = ColorRGBA(51, 51, 255, 1)
                 markers.append(marker)
                 markers_pub.publish(markers)
@@ -139,6 +151,7 @@ def recognized_face(data):
                 if sound_sent == 0:
                     sound_sent = 1
                     speak_robot("We found Harry Potter, the boy who lived!")
+                det_entry['name'] = name    
                 marker.color = ColorRGBA(255, 0, 0, 1)
                 markers.append(marker)
                 markers_pub.publish(markers)
@@ -150,6 +163,7 @@ def recognized_face(data):
                 if sound_sent == 0:
                     sound_sent = 1
                     speak_robot("We found Forest Gump, and of course he was running!")
+                det_entry['name'] = name
                 marker.color = ColorRGBA(255, 128, 0, 1)
                 markers.append(marker)
                 markers_pub.publish(markers)
@@ -161,6 +175,7 @@ def recognized_face(data):
                 if sound_sent == 0:
                     sound_sent = 1
                     speak_robot("We found Fillip!")
+                det_entry['name'] = name
                 marker.color = ColorRGBA(102, 51, 0, 1)
                 markers.append(marker)
                 markers_pub.publish(markers)
@@ -172,6 +187,7 @@ def recognized_face(data):
                 if sound_sent == 0:
                     sound_sent = 1
                     speak_robot("We found Kim! Just kidding, no one finds Kim.")
+                det_entry['name'] = name    
                 marker.color = ColorRGBA(153, 0, 153, 1)
                 markers.append(marker)
                 markers_pub.publish(markers)
@@ -183,6 +199,7 @@ def recognized_face(data):
                 if sound_sent == 0:
                     sound_sent = 1
                     speak_robot("We found Matthew!")
+                det_entry['name'] = name
                 marker.color = ColorRGBA(255, 255, 0, 1)
                 markers.append(marker)
                 markers_pub.publish(markers)
@@ -194,6 +211,7 @@ def recognized_face(data):
                 if sound_sent == 0:
                     sound_sent = 1
                     speak_robot("We found Scarlett!")
+                det_entry['name'] = name
                 marker.color = ColorRGBA(255, 0, 127, 1)
                 markers.append(marker)
                 markers_pub.publish(markers)
@@ -205,6 +223,7 @@ def recognized_face(data):
                 if sound_sent == 0:
                     sound_sent = 1
                     speak_robot("We found Ellen and it was quite a show!")
+                det_entry['name'] = name
                 marker.color = ColorRGBA(0, 255, 255, 1)
                 markers.append(marker)
                 markers_pub.publish(markers)
@@ -226,6 +245,7 @@ def detection_thresh(points):
     global detected
     global detect_true
     global sound_sent
+    global det_entry
 
     for newPoint in points.markers:
         current_point = newPoint
@@ -251,8 +271,7 @@ def detection_thresh(points):
 
         if min_point == None:
             detect_true = 0     #when we detect new face, we dont want recognizer to work immediately, but wait for this to become 1 (which means: face detected!!)
-            det[str(xp) + ";" + str(yp) + ";" + str(zp)] = {'count': 1, 'detected': False,
-                                                                 'point': str(xp) + ";" + str(yp) + ";" + str(zp)}
+            det[str(xp) + ";" + str(yp) + ";" + str(zp)] = {'count': 1, 'detected': False, 'name' = None, 'point': str(xp) + ";" + str(yp) + ";" + str(zp)}
         elif min_point != "not":
             min_point['count'] += 1
             if min_point['count'] > 25:
@@ -261,8 +280,9 @@ def detection_thresh(points):
                 print "face " + str(detected) + " detected!!!!\n" + str(min_point)
                 print det
 
-                #so we detected a face - let's reset the counters and ask recognizer what he sees
+                #so we detected a new face - let's reset the counters and ask recognizer what he sees
                 detect_true = 1     #we are indeed looking at the face - let's allow recognizer to start counting!
+                det_entry = min_point       # global variable, will save name of the person to it once the point is recognized
                 sound_sent = 0
                 peter = 0
                 tina = 0
@@ -277,6 +297,77 @@ def detection_thresh(points):
 
         else:
             pass
+
+
+def sign_detection(points):
+    #the same as for the face detection
+    global detect_sign_true
+    global det_signs
+    global sign_detected
+    global det_entry_sign
+    global signs_count
+
+    for newPoint in points.markers:
+        position = newPoint.pose.position
+        xp = round(position.x, 2)
+        yp = round(position.y, 2)
+        zp = round(position.z, 2)
+        mind = 0.5
+        min_point = None
+        if zp > 1:
+            print xp, yp, zp
+            continue
+        for key in det:
+            (x, y, z) = key.split(';')
+            dist_x = abs(xp - float(x))
+            dist_y = abs(yp - float(y))
+            dist_z = abs(zp - float(z))
+            if dist_x <= mind and dist_y <= mind and dist_z <= mind:
+                if not det[key]['detected']:
+                    min_point = det[key]
+                else:
+                    min_point = "not"
+
+        if min_point == None:
+            detect_sign_true = 0     #when we detect new sign, we dont want recognizer to work immediately, but wait for this to become 1 (which means: sign detected!!)
+            det[str(xp) + ";" + str(yp) + ";" + str(zp)] = {'count': 1, 'detected': False, 'name' = None, 'point': str(xp) + ";" + str(yp) + ";" + str(zp)}
+        elif min_point != "not":
+            min_point['count'] += 1
+            if min_point['count'] > 25:
+                min_point['detected'] = True
+                detected += 1
+                print "sign" + str(detected) + " detected!!!!\n" + str(min_point)
+                print det
+                
+                #so we detected a new sign - let's reset the counters and ask recognizer what he sees
+                detect_sign_true = 1     #we are indeed looking at the face - let's allow recognizer to start counting!
+                det_entry_sign = min_point       # global variable, will save name of the person to it once the point is recognized
+                for key in signs_count:            #reset to zero
+                    signs_count[key][count] = 0
+
+        else:
+            pass
+
+def recognized_sign(data):
+    global signs_count
+    global detect_sign_true
+    global det_entry_sign
+
+    name = data.data
+    print name
+
+    thresh = 15
+    thresh_reached = False
+    
+    if detect_sign_true == 1 and det_entry_sign['name'] == None:
+        if signs_count[name]:
+            signs_count[name][count] += 1
+            if signs_count[name][count] > thresh:
+                det_entry_sign['name'] = name
+                # find the closest node in graph
+        else:
+            det[name] = {'count': 1, 'name': name}
+
 
 
 def voice_action(data):
@@ -309,16 +400,29 @@ def voice_action(data):
     print "Mission Impossible: %s %s %s %s %s"%(name,  colour_building, building[0], colour_street, street[0])
     speak_robot("Where would you like to go, " + name)
 
+def publish_faces:
+    global det
+    global markers_pub
+
+    markers = []
+    marker = Marker()
+
+    for key in det:
+        (x, y, z) = key.split(';')
+
+
 
 def face_recognizer():
     global markers_pub
     global voice_pub
     rospy.init_node('face_recognizer', anonymous=True)
-    markers_pub = rospy.Publisher('recognizer/face_marker', MarkerArray)
+    markers_pub = rospy.Publisher('recognizer/face_markers', MarkerArray)
     voice_pub = rospy.Publisher('/robotsound', SoundRequest, queue_size=1)
     rospy.Subscriber('pcl/transformedMarkers', MarkerArray, detection_thresh)
+    rospy.Subscriber('/signdetector/markers', MarkerArray, sign_detection)
     rospy.Subscriber('face_recognizer/face', String, recognized_face)
     rospy.Subscriber("/command", String, voice_action)
+
 
     rospy.spin()
 
