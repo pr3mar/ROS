@@ -14,20 +14,33 @@ from geometry_msgs.msg import *
 
 goals = []
 graph = None
-al = None
+alib = None
 
 def sendGoals(): # subscribe to /amcl_pose to get the exact pose at the moment
 	# graph.printGraph() # just a test if graph is set
-	al = actionlib.SimpleActionClient("move_base/current_goal", MoveBaseAction)
-	# al.start()
-	al.wait_for_server()
+	if(alib == None):
+		print "WTF?"
+		return
+	i = 0
 	for node in graph.nodes:
-		goal = MoveBaseActionGoal()
-		goal.goal = node.goal
+		rospy.loginfo("Sending goal: " + str(i))
+		goal = MoveBaseGoal()
+		stamp = rospy.Time.now()
+		# goal.header.stamp = stamp
+		# goal.header.frame_id = 'map'
+		# goal.goal_id.stamp = stamp
+		# goal.goal_id.id = 'graph_' + str(i)
+		goal = node.goal
+		# goal.target_pose.header.frame_id = '/map'
+		goal.target_pose.header.stamp = stamp
 		print goal
-		al.send_goal(goal)
-		al.wait_for_result(rospy.Duration.from_sec(5.0))
+		alib.send_goal(goal)
+		result = alib.wait_for_result(rospy.Duration(90.0))
+		state = alib.get_state()
+		print "result = ", result, ", state = ", state
 		# print al.getState()
+		i += 1
+		break
 
 def send():
 	pass
@@ -108,10 +121,10 @@ if __name__ == '__main__':
 			goals = []
 			for i in range(len(x_coords)):
 				goal = MoveBaseGoal()
-				goal.target_pose.header.
-				goal.target_pose.header.frame_id = "map"
+				goal.target_pose.header.frame_id = "/map"
 				goal.target_pose.pose.position.x = x_coords[i]#random.randrange(0, 20)
 				goal.target_pose.pose.position.y = y_coords[i]#random.randrange(0, 20)
+				goal.target_pose.pose.orientation.w = 1 #random.randrange(0, 20)
 				goals.append(goal)
 			edges = [
 				(0, 1),
@@ -140,6 +153,12 @@ if __name__ == '__main__':
 			# print "removed = ", graph.removeEdge((3, 4))
 			# graph.printGraph()
 			# print rospy.get_name()
+			alib = actionlib.SimpleActionClient("move_base", MoveBaseAction)
+			print alib
+			rospy.loginfo("Waiting for the server")
+			alib.wait_for_server(rospy.Duration(5.0))
+			rospy.loginfo("Server started.")
+			
 			sendGoals()
 			# rospy.spin()
 
