@@ -89,11 +89,12 @@ class Node:
 		return "x = " + str(self.goal.target_pose.pose.position.x) + \
 					", y = " + str(self.goal.target_pose.pose.position.y) 
 	# constructor
-	def __init__(self, goal):
+	def __init__(self, goal, color = None):
 		self.goal = goal
 		self.ingoing = []
 		self.outgoing = []
 		self.id = Node.node
+		self.color = color
 		Node.node += 1
 
 	# to string override
@@ -107,7 +108,7 @@ class Graph:
 	def printGraph(self):
 		for el in self.nodes:
 			print "current:", el, ", has degree =", el.getDegree(), \
-						", coords = "  + el.getCoords()
+						", coords = "  + el.getCoords(), "of color = ", el.color
 			print "ingoing  = ",
 			for x in el.ingoing:
 				print x, "(dist = ", x.cost,"); ",
@@ -258,10 +259,23 @@ class Graph:
 			print str(e) + ", ",
 		print "]"
 
-	def __init__(self, goals, edges):
+	# def __init__(self, goals, edges):
+	# 	self.nodes = []
+	# 	for goal in goals:
+	# 		self.nodes.append(Node(goal))
+	# 	self.edges = []
+	# 	try:
+	# 		self.defineEdges(edges)
+	# 	except Exception as e:
+	# 		print e
+
+	def __init__(self, goals, edges, colors=None):
 		self.nodes = []
-		for goal in goals:
-			self.nodes.append(Node(goal))
+		for i in range(len(goals)):
+			if colors != None:
+				self.nodes.append(Node(goals[i], colors[i]))
+			else:
+				self.nodes.append(Node(goals[i]))
 		self.edges = []
 		try:
 			self.defineEdges(edges)
