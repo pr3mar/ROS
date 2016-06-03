@@ -40,7 +40,7 @@ def sendGoals(): # subscribe to /amcl_pose to get the exact pose at the moment
 		print "result = ", result, ", state = ", state
 		# print al.getState()
 		i += 1
-		break
+		#break
 
 def send():
 	pass
