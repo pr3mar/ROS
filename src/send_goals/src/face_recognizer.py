@@ -89,21 +89,7 @@ def speak_robot(str_speech):
 
 
 def recognized_face(data):
-    global peter
-    global tina
-    global harry
-    global forest
-    global filip
-    global kim
-    global matthew
-    global scarlett
-    global ellen
-    global current_point
-    global markers_pub
-    global detect_true
-    global sound_sent
-    global color
-    global det_entry
+    global peter, tina, harry, forest, filip, kim, matthew, scarlett, ellen, current_point, markers_pub, detect_true, sound_sent, color, det_entry
 
     name = data.data
     print name
@@ -231,21 +217,7 @@ def recognized_face(data):
     
 
 def detection_thresh(points):
-    global peter
-    global tina
-    global harry
-    global forest
-    global filip
-    global kim
-    global matthew
-    global scarlett
-    global ellen
-    global current_point
-    global det
-    global detected
-    global detect_true
-    global sound_sent
-    global det_entry
+    global peter, tina, harry, forest, filip, kim, matthew, scarlett, ellen, current_point, det, detected, detect_true, sound_sent, det_entry
 
     for newPoint in points.markers:
         current_point = newPoint
@@ -422,8 +394,6 @@ def face_recognizer():
     rospy.Subscriber('/signdetector/markers', MarkerArray, sign_detection)
     rospy.Subscriber('face_recognizer/face', String, recognized_face)
     rospy.Subscriber("/command", String, voice_action)
-
-
     rospy.spin()
 
 if __name__ == '__main__':
