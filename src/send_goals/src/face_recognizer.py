@@ -32,8 +32,8 @@ sign_detected = 0
 detect_sign_true = 0
 det_entry_sign = None
 signs_count = {}
-color_map = {'honk': ColorRGBA(85, 96, 240, 1), 'left': ColorRGBA(16, 31, 239, 1), 'limit': ColorRGBA(249, 98, 98, 1), 'oneway': ColorRGBA(245, 1, 1, 1), 'stop': ColorRGBA(152, 6, 6, 1), 'peter': ColorRGBA(128, 255, 0, 1), 'tina': ColorRGBA(51, 51, 255, 1), 'harry': ColorRGBA(51, 51, 255, 1), 'forest': ColorRGBA(255, 128, 0, 1), 'filip': ColorRGBA(102, 51, 0, 1), 'kim': ColorRGBA(153, 0, 153, 1), 'mathew': ColorRGBA(255, 255, 0, 1), 'scarlett': ColorRGBA(255, 0, 127, 1), 'ellen': ColorRGBA(0, 255, 255, 1)}
-
+color_map = {'honk': ColorRGBA(85, 96, 240, 1), 'left': ColorRGBA(16, 31, 239, 1), 'limit': ColorRGBA(249, 98, 98, 1), 'oneway': ColorRGBA(245, 1, 1, 1), 'stop': ColorRGBA(152, 6, 6, 1), 'peter': ColorRGBA(128, 255, 0, 1), 'tina': ColorRGBA(51, 51, 255, 1), 'harry': ColorRGBA(242, 208, 15, 1), 'forest': ColorRGBA(255, 128, 0, 1), 'filip': ColorRGBA(102, 51, 0, 1), 'kim': ColorRGBA(19, 237, 226, 1), 'mathew': ColorRGBA(203, 17, 240, 1), 'scarlett': ColorRGBA(111, 255, 0, 1), 'ellen': ColorRGBA(10, 107, 107, 1)}
+# honk: light blue, left: dark blue, limit: pink, oneway: light red, stop: dark red, peter: light green, tina: dark green, harry: light orange,  forest: orange, filip: brown, kim: tirquoise, mathew: purple, scarlett: light green, ellen: dark green-blue 
 
 def min_distance_all(tokens, find):
     name = None
