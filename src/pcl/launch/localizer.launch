@@ -23,4 +23,14 @@
     <remap from="mapper" to="/facedetector/markers" />
   </node>
 
+  <node pkg="pcl" type="transformMapper.py" name="transformMapperFaces">
+    <param name="inTopic" type="str" value="/facedetector/markers"/>
+    <param name="outTopic" type="str" value="/transformedMarkers/faces"/>
+  </node>
+
+  <node pkg="pcl" type="transformMapper.py" name="transformMapperSigns">
+    <param name="inTopic" value="/signdetector/markers"/>
+    <param name="outTopic" value="/transformedMarkers/signs"/>
+  </node>
+
 </launch>
