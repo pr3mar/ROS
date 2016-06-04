@@ -206,8 +206,8 @@ int main(int argc, char **argv) {
 	classes = split(raw,';');
 	std::vector<Mat> signs;
 	vector<int> ids;
-	load_signs(dataset, classes, signs, ids);
-	buildHogDescriptors(signs, ids);
+	// load_signs(dataset, classes, signs, ids);
+	// buildHogDescriptors(signs, ids);
 	// train(ids);
 	load_svms(svm_path);
 	// test(dataset);
