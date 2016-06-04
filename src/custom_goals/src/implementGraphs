@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+import dynamic_reconfigure.client
 import roslib, sys
 import rospy
 import actionlib
@@ -20,6 +20,7 @@ alib = None
 currentLocation = None
 setGoal = False
 poses_to_remove = {"3-4": [(3, 4), False], "14-16": [(14, 16), False]}
+reconf = None
 
 # maybe not usefull at all, just for exploring
 def sendAllGoals():
@@ -133,10 +134,31 @@ def removeEdges(pose):
 				graph.removeEdge(edge[0])
 				edge[1] = True
 
+def slow(msg):
+	global reconf
+	if msg.data == "true":
+		reconf.update_configuration({"speed_lim_v": 0.2})
+		rospy.Timer(rospy.Duration(10), resetSpeed)
+
+def stop(msg):
+	global reconf
+	if msg.data == "true":
+		reconf.update_configuration({"speed_lim_v": 0.})
+		rospy.Timer(rospy.Duration(10), resetSpeed)
+
+def slow(msg):
+	global reconf
+	if msg.data == "true":
+		reconf.update_configuration({"speed_lim_v": 0.2})
+		rospy.Timer(rospy.Duration(10), resetSpeed)
+
+def resetSpeed():
+	reconf.update_configuration({"speed_lim_v": 0.7}) # not sure of default vals
+
 if __name__ == '__main__':
 	try:
 		test = False
-		doROS = True
+		doROS = False
 		if test:
 			# solely for testing purposes:
 			goals = []
@@ -260,6 +282,8 @@ if __name__ == '__main__':
 				rospy.init_node('graph_send_goals')
 				# init the actionlib server to send goals (works only locally)
 				alib = actionlib.SimpleActionClient("move_base", MoveBaseAction)
+				reconf = dynamic_reconfigure.client.Client("navigation_velocity_smoother")
+				reconf.update_configuration({"speed_lim_v": 0.7})
 				rospy.loginfo("Waiting for actionlib server")
 				alib.wait_for_server(rospy.Duration(5.0))
 				rospy.loginfo("Actionlib server started.")
@@ -267,9 +291,13 @@ if __name__ == '__main__':
 				rospy.Subscriber("/cancel", String, cancel)
 				rospy.Subscriber("/search/street", String, searchStreets)
 				rospy.Subscriber("/goto", Pose, gotoPose)
+				rospy.Subscriber("/sign/slow", String, slow)
+				rospy.Subscriber("/sign/stop", String, stop)
+				rospy.Subscriber("/sign/honk", String, honk)
 				# rospy.Subscriber("sign_recognition", PoseStamped, removeEdges) # TODO: really need to discuss this this!!!
 				# # sendAllGoals() # just to explore the map
-				rospy.spin()  
+			
+				rospy.spin()
 
 	except rospy.ROSInterruptException:
 		pass
