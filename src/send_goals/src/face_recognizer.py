@@ -7,7 +7,7 @@ from std_msgs.msg import String, ColorRGBA
 from geometry_msgs.msg import *
 from visualization_msgs.msg import Marker, MarkerArray
 from sound_play.msg import SoundRequest
-from tf2_msgs import TFMmessage
+import tf
 
 status = 0
 
@@ -52,7 +52,7 @@ def min_distance_all(tokens, find):
     if min_dist > 4:
         return None, 0
 
-    print "Name we are looking for: %s. It is similar to: %s"%(name, original)
+    #print "Name we are looking for: %s. It is similar to: %s"%(name, original)
     return  name, min_index
 
 
@@ -71,13 +71,13 @@ def min_distance_one(original, find):
             min_dist = distance
             new = j
 
-    print "Name we are looking for: %s. It is similar to: %s"%(new, original)
+    #print "Name we are looking for: %s. It is similar to: %s"%(new, original)
     return  new
 
 
 def speak_robot(str_speech):
     #this doesnt work the first time - nobody knows why???
-    print str_speech
+    #print str_speech
     tmp = SoundRequest()
     tmp.sound = -3
     tmp.command = 1
@@ -92,7 +92,7 @@ def recognized_face(data):
     global markers_pub, detect_true, sound_sent, color, det_entry, faces_count, face_marker, search_name, status, cancel_pub
 
     name = data.data
-    print name
+    #print name
 
     #when we have the position, but looking for the rotation (TO-DO: wait for the detection first)
     if status == 1 and search_name == name:
@@ -104,10 +104,10 @@ def recognized_face(data):
     if detect_true == 1 and det_entry['name'] == None:
         if name in faces_count:
             faces_count[name]['count'] += 1
-            print faces_count[name]['name']+": "+str(faces_count[name]['count'])
+            #print faces_count[name]['name']+": "+str(faces_count[name]['count'])
             if faces_count[name]['count'] > thresh:
                 det_entry['name'] = name
-                print "adding name to the dictionary!"
+                print "adding name to the dictionary!: ", det_entry['name'], det_entry['point']
                 # find the closest node in graph
         else:
             faces_count[name] = {'count': 1, 'face': False, 'name': name}
@@ -146,8 +146,8 @@ def detection_thresh(points):
                 min_point['detected'] = True
                 min_point['marker'] = newPoint      #we save the last marker
                 detected += 1
-                print "face " + str(detected) + " detected!!!!\n" + str(min_point)
-                print det
+                print "face " + str(detected) + " detected!!!!\n"
+                #print det
 
                 #so we detected a new face - let's reset the counters and ask recognizer what he sees
                 detect_true = 1     #we are indeed looking at the face - let's allow recognizer to start counting!
@@ -195,14 +195,14 @@ def sign_detection(points):
                 min_point['detected'] = True
                 min_point['marker'] = newPoint      #we save the last marker
                 sign_detected += 1
-                print "sign" + str(detected) + " detected!!!!\n" + str(min_point)
-                print det
+                print "sign" + str(detected) + " detected!!!!\n"
+                #print det
                 
                 #so we detected a new sign - let's reset the counters and ask recognizer what he sees
                 detect_sign_true = 1     #we are indeed looking at the face - let's allow recognizer to start counting!
                 det_entry_sign = min_point       # global variable, will save name of the person to it once the point is recognized
                 for key1 in signs_count:            #reset to zero
-                    signs_count[key1][count] = 0
+                    signs_count[key1]['count'] = 0
 
         else:
             pass
@@ -213,7 +213,7 @@ def recognized_sign(data):
     global det_entry_sign
 
     name = data.data
-    print name
+    #print name
 
     thresh = 15
     thresh_reached = False
@@ -221,10 +221,10 @@ def recognized_sign(data):
     if detect_sign_true == 1 and det_entry_sign['name'] == None:
         if name in  signs_count:
             signs_count[name]['count'] += 1
-            print signs_count[name]['name']+": "+str(signs_count[name]['count'])
+            #print signs_count[name]['name']+": "+str(signs_count[name]['count'])
             if signs_count[name]['count'] > thresh:
                 det_entry_sign['name'] = name
-                print "adding name to the dictionary!"
+                print "adding name to the dictionary!: ", det_entry_sign['name'], det_entry_sign['point']
                 # find the closest node in graph
         else:
             signs_count[name] = {'count': 1, 'face': False, 'name': name}
@@ -233,7 +233,7 @@ def recognized_sign(data):
 def voice_action(data):
     global search_name
 
-    print "You said: "+data.data
+    #print "You said: "+data.data
 
     #now do sth with that data!
     names = ['Peter', 'Harry', 'Tina', 'Scarlet', 'Forest', 'Kim', 'Filip', 'Matthew', 'Ellen']
@@ -243,8 +243,8 @@ def voice_action(data):
     sentence = data.data
 
     tokens = nltk.word_tokenize(sentence)
-    print "Tokens:\n"
-    print tokens
+    #print "Tokens:\n"
+    #print tokens
 
     #first word is name
     colour_building = None
@@ -265,7 +265,7 @@ def voice_action(data):
     street_pub.publish(colour_street)
 
 
-def publish_faces():
+def publish_faces(non):
     global det, markers_pub, search_name, goto_pub, cancel_pub, status
     
     markers = []
@@ -300,16 +300,16 @@ def face_recognizer():
     global markers_pub, voice_pub, cancel_pub, street_pub, goto_pub
 
     rospy.init_node('face_recognizer', anonymous=True)
-    markers_pub = rospy.Publisher('visualization/markers', MarkerArray)
+    markers_pub = rospy.Publisher('/viz/markers', MarkerArray)
     cancel_pub = rospy.Publisher('/cancel', String, queue_size=100)
     street_pub = rospy.Publisher('/search/street', String, queue_size=100)
-    goto_pub = rospy.Publisher('/goto', pose, queue_size=100)
+    goto_pub = rospy.Publisher('/goto', Pose, queue_size=100)
     voice_pub = rospy.Publisher('/robotsound', SoundRequest, queue_size=100)
     rospy.Subscriber('/transformedMarkers/faces', MarkerArray, detection_thresh)
     rospy.Subscriber('/transformedMarkers/signs', MarkerArray, sign_detection)
     rospy.Subscriber('/recognizer/signs', String, recognized_sign)
     rospy.Subscriber('/recognizer/face', String, recognized_face)
-    rospy.Subscriber('/tf', TFMmessage, publish_faces)
+    rospy.Subscriber('/tf', tf.msg.tfMessage, publish_faces)
     rospy.Subscriber("/command", String, voice_action)
     rospy.spin()
 

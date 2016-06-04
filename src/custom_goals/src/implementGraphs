@@ -6,6 +6,7 @@ import actionlib
 import random
 import math
 from graph.graph import Graph
+from std_msgs.msg import String
 
 # from sensor_msgs.msg import image_encodings # do I need this?
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal, MoveBaseActionGoal
@@ -37,11 +38,11 @@ def sendAllGoals():
 		result = alib.wait_for_result(rospy.Duration(90.0))
 		state = alib.get_state()
 		print "result = ", result, ", state = ", state
-		if result and state == GoalStatus.SUCCEEDED:
-			result = True
-		else:
-			rospy.loginfo("FAILED TO REACH GOAL")
-			alib.cancel_goal()
+		#if result and state == GoalStatus.SUCCEEDED:
+		#	result = True
+		#else:
+		#	rospy.loginfo("FAILED TO REACH GOAL")
+		#	alib.cancel_goal()
 		i += 1
 
 # cancel all goals if message is true
@@ -75,19 +76,19 @@ def send(goals):
 		result = alib.wait_for_result(rospy.Duration(90.0))
 		state = alib.get_state()
 		print "result = ", result, ", state = ", state
-		if result and state == GoalStatus.SUCCEEDED:
-			result = True
-		else:
-			rospy.loginfo("FAILED TO REACH GOAL!!!")
-			alib.cancel_goal()
+		#if result and state == GoalStatus.SUCCEEDED:
+		#	result = True
+		#else:
+		#	rospy.loginfo("FAILED TO REACH GOAL!!!")
+		#	alib.cancel_goal()
 	setGoal = False
 
 #localize by current position of rooomba
 def localizeRoomba(poseWithCov): # get data from /amcl_pose
 	global setGoal, currentLocation
 	nearest_node = graph.localize(poseWithCov.pose.pose)
-	currentLocation = graph.getNodeByID(nearest_node[0])
-	# print "location = ", nearest_node[0], nearest_node[1]
+	currentLocation = nearest_node[0]
+	#print "location = ", nearest_node[0], nearest_node[1]
 	
 	# this need to be reset somewhere else
 	if not setGoal and False: # dead code at the moment, just to test
@@ -105,8 +106,10 @@ def searchStreets(street):
 	global currentLocation, colorMap
 	if street.data in colorMap:
 		streets = graph.getByColorSorted(currentLocation.goal.target_pose.pose, colorMap[street.data])
-		path = graph.Astar(currentLocation, streets[0])
-		path = path + streets[1:]
+		#print streets
+		path = graph.Astar(currentLocation, streets[0][0])
+		path = path + [x[0].id for x in streets[1:]]
+		print path
 		send(path)
 	
 # go to a specific position (where a face is located)
@@ -126,7 +129,7 @@ def removeEdges(pose):
 	for edge in poses_to_remove:
 		if not nearest_node[1]:
 			el = poses_to_remove[edge]
-			if(nearest_node[0] == edge[0][0] || nearest_node[0] == edge[0][1]):
+			if(nearest_node[0] == edge[0][0] or nearest_node[0] == edge[0][1]):
 				graph.removeEdge(edge[0])
 				edge[1] = True
 
@@ -260,10 +263,10 @@ if __name__ == '__main__':
 				rospy.loginfo("Waiting for actionlib server")
 				alib.wait_for_server(rospy.Duration(5.0))
 				rospy.loginfo("Actionlib server started.")
-				rospy.Subscriber("amcl_pose", PoseWithCovarianceStamped, localizeRoomba)
+				rospy.Subscriber("/amcl_pose", PoseWithCovarianceStamped, localizeRoomba)
 				rospy.Subscriber("/cancel", String, cancel)
 				rospy.Subscriber("/search/street", String, searchStreets)
-				rospy.Subscriber("/goto", PoseStamped, gotoPose)
+				rospy.Subscriber("/goto", Pose, gotoPose)
 				# rospy.Subscriber("sign_recognition", PoseStamped, removeEdges) # TODO: really need to discuss this this!!!
 				# # sendAllGoals() # just to explore the map
 				rospy.spin()  
