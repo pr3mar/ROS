@@ -96,10 +96,10 @@ def recognized_face(data):
     
     if detect_true == 1 and det_entry['name'] == None:
         if name in  faces_count:
-            faces_count[name][count] += 1
-            print faces_count[name][name]+": "+faces_count[name][count]
-            if faces_count[name][count] > thresh:
-                det_entry_sign['name'] = name
+            faces_count[name]['count'] += 1
+            print faces_count[name]['name']+": "+str(faces_count[name]['count'])
+            if faces_count[name]['count'] > thresh:
+                det_entry['name'] = name
                 print "adding name to the dictionary!"
                 # find the closest node in graph
         else:
@@ -110,6 +110,7 @@ def recognized_face(data):
 def detection_thresh(points):
     global current_point, det, detected, detect_true, sound_sent, det_entry, faces_count
 
+    print "detecting!"
     for newPoint in points.markers:
         current_point = newPoint
         position = newPoint.pose.position
@@ -148,7 +149,7 @@ def detection_thresh(points):
                 det_entry = min_point       # global variable, will save name of the person to it once the point is recognized
                 sound_sent = 0
                 for key1 in faces_count:            #reset to zero
-                    faces_count[key1][count] = 0
+                    faces_count[key1]['count'] = 0
                 
 
         else:
@@ -218,9 +219,9 @@ def recognized_sign(data):
     
     if detect_sign_true == 1 and det_entry_sign['name'] == None:
         if name in  signs_count:
-            signs_count[name][count] += 1
-            print signs_count[name][name]+": "+signs_count[name][count]
-            if signs_count[name][count] > thresh:
+            signs_count[name]['count'] += 1
+            print signs_count[name]['name']+": "+str(signs_count[name]['count'])
+            if signs_count[name]['count'] > thresh:
                 det_entry_sign['name'] = name
                 print "adding name to the dictionary!"
                 # find the closest node in graph
@@ -277,10 +278,10 @@ def face_recognizer():
     rospy.init_node('face_recognizer', anonymous=True)
     markers_pub = rospy.Publisher('recognizer/face_markers', MarkerArray)
     voice_pub = rospy.Publisher('/robotsound', SoundRequest, queue_size=1)
-    rospy.Subscriber('pcl/transformedMarkers', MarkerArray, detection_thresh)
-    rospy.Subscriber('/signdetector/markers', MarkerArray, sign_detection)
-    rospy.Subscriber('/sign_recognizer/sign', String, recognized_sign)
-    rospy.Subscriber('face_recognizer/face', String, recognized_face)
+    rospy.Subscriber('/transformedMarkers/faces', MarkerArray, detection_thresh)
+    rospy.Subscriber('/transformedMarkers/signs', MarkerArray, sign_detection)
+    rospy.Subscriber('/recognizer/sign', String, recognized_sign)
+    rospy.Subscriber('/recognizer/face', String, recognized_face)
     rospy.Subscriber("/command", String, voice_action)
     rospy.spin()
 

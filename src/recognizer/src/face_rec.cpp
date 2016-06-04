@@ -97,7 +97,7 @@ int main( int argc, char** argv ) {
 
   ROS_INFO("Waiting for face to recognize: ");
   sub = node.subscribe("/facedetector/faces", 100, recognize);
-  pub = node.advertise<std_msgs::String>("/face_recognizer/face", 1000);
+  pub = node.advertise<std_msgs::String>("/recognizer/face", 1000);
   spin();
   return 0;
 }
