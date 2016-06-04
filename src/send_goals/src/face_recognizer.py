@@ -280,7 +280,7 @@ def face_recognizer():
     voice_pub = rospy.Publisher('/robotsound', SoundRequest, queue_size=1)
     rospy.Subscriber('/transformedMarkers/faces', MarkerArray, detection_thresh)
     rospy.Subscriber('/transformedMarkers/signs', MarkerArray, sign_detection)
-    rospy.Subscriber('/recognizer/sign', String, recognized_sign)
+    rospy.Subscriber('/recognizer/signs', String, recognized_sign)
     rospy.Subscriber('/recognizer/face', String, recognized_face)
     rospy.Subscriber("/command", String, voice_action)
     rospy.spin()
