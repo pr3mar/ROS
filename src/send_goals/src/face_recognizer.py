@@ -16,15 +16,7 @@ current_point = None
 det = {}
 detected = 0
 detect_true = 0
-peter = 0
-tina = 0
-harry = 0
-forest = 0
-filip = 0
-kim = 0
-matthew = 0
-scarlett = 0
-ellen = 0
+faces_count = {}
 sound_sent = 0
 color = None
 det_entry = None
@@ -34,7 +26,7 @@ det_signs = {}
 sign_detected = 0
 detect_sign_true = 0
 det_entry_sign = None
-all_things_detected = {}
+signs_count = {}
 
 
 def min_distance_all(tokens, find):
@@ -91,7 +83,7 @@ def speak_robot(str_speech):
 
 
 def recognized_face(data):
-    global peter, tina, harry, forest, filip, kim, matthew, scarlett, ellen, current_point, markers_pub, detect_true, sound_sent, color, det_entry
+    global current_point, markers_pub, detect_true, sound_sent, color, det_entry, faces_count
 
     name = data.data
     print name
@@ -102,119 +94,16 @@ def recognized_face(data):
     thresh = 15
     thresh_reached = False
     
-    # TO-DO: stop voting once the thresh is reached!
-    
-    if detect_true == 1:
-        if name == 'peter':
-            peter += 1
-            print peter
-            if peter > thresh:
-                print "Recognized Peter!"
-                if sound_sent == 0:
-                    sound_sent = 1
-                    speak_robot("We found Peter!")
-                
-                det_entry['name'] = name
-                marker.color = ColorRGBA(128, 255, 0, 1)
-                markers.append(marker)
-                markers_pub.publish(markers)
-
-        elif name == 'tina':
-            tina += 1
-            print tina
-            if tina > thresh:
-                print "Recognized Tina!"
-                if sound_sent == 0:
-                    sound_sent = 1
-                    speak_robot("We found Tina!")
-                det_entry['name'] = name    
-                marker.color = ColorRGBA(51, 51, 255, 1)
-                markers.append(marker)
-                markers_pub.publish(markers)
-                
-        elif name == 'harry':
-            harry += 1
-            print harry
-            if harry > thresh:
-                if sound_sent == 0:
-                    sound_sent = 1
-                    speak_robot("We found Harry Potter, the boy who lived!")
-                det_entry['name'] = name    
-                marker.color = ColorRGBA(255, 0, 0, 1)
-                markers.append(marker)
-                markers_pub.publish(markers)
-        
-        elif name == 'forest':
-            forest += 1
-            print forest
-            if forest > thresh:
-                if sound_sent == 0:
-                    sound_sent = 1
-                    speak_robot("We found Forest Gump, and of course he was running!")
-                det_entry['name'] = name
-                marker.color = ColorRGBA(255, 128, 0, 1)
-                markers.append(marker)
-                markers_pub.publish(markers)
-                
-        elif name == 'filip':
-            filip += 1
-            print filip
-            if filip > thresh:
-                if sound_sent == 0:
-                    sound_sent = 1
-                    speak_robot("We found Fillip!")
-                det_entry['name'] = name
-                marker.color = ColorRGBA(102, 51, 0, 1)
-                markers.append(marker)
-                markers_pub.publish(markers)
-                
-        elif name == 'kim':
-            kim += 1
-            print kim
-            if kim > thresh:
-                if sound_sent == 0:
-                    sound_sent = 1
-                    speak_robot("We found Kim! Just kidding, no one finds Kim.")
-                det_entry['name'] = name    
-                marker.color = ColorRGBA(153, 0, 153, 1)
-                markers.append(marker)
-                markers_pub.publish(markers)
-                
-        elif name == 'mathew':
-            matthew += 1
-            print matthew
-            if matthew > thresh:
-                if sound_sent == 0:
-                    sound_sent = 1
-                    speak_robot("We found Matthew!")
-                det_entry['name'] = name
-                marker.color = ColorRGBA(255, 255, 0, 1)
-                markers.append(marker)
-                markers_pub.publish(markers)
-                
-        elif name == 'scarlett':
-            scarlett += 1
-            print scarlett
-            if scarlett > thresh:
-                if sound_sent == 0:
-                    sound_sent = 1
-                    speak_robot("We found Scarlett!")
-                det_entry['name'] = name
-                marker.color = ColorRGBA(255, 0, 127, 1)
-                markers.append(marker)
-                markers_pub.publish(markers)
-                
-        elif name == 'ellen':
-            ellen += 1
-            print ellen
-            if ellen > thresh:
-                if sound_sent == 0:
-                    sound_sent = 1
-                    speak_robot("We found Ellen and it was quite a show!")
-                det_entry['name'] = name
-                marker.color = ColorRGBA(0, 255, 255, 1)
-                markers.append(marker)
-                markers_pub.publish(markers)
+    if detect_true == 1 and det_entry['name'] == None:
+        if name in  faces_count:
+            faces_count[name][count] += 1
+            print faces_count[name][name]+": "+faces_count[name][count]
+            if faces_count[name][count] > thresh:
+                det_entry_sign['name'] = name
+                print "adding name to the dictionary!"
+                # find the closest node in graph
+        else:
+            faces_count[name] = {'count': 1, 'face': False, 'name': name}
     
     
 
@@ -245,7 +134,7 @@ def detection_thresh(points):
 
         if min_point == None:
             detect_true = 0     #when we detect new face, we dont want recognizer to work immediately, but wait for this to become 1 (which means: face detected!!)
-            det[str(xp) + ";" + str(yp) + ";" + str(zp)] = {'count': 1, 'detected': False, 'name': None, 'point': str(xp) + ";" + str(yp) + ";" + str(zp)}
+            det[str(xp) + ";" + str(yp) + ";" + str(zp)] = {'count': 1, 'detected': False, 'name': None, 'face': True, 'point': str(xp) + ";" + str(yp) + ";" + str(zp)}
         elif min_point != "not":
             min_point['count'] += 1
             if min_point['count'] > 25:
@@ -279,7 +168,7 @@ def sign_detection(points):
     global det_signs
     global sign_detected
     global det_entry_sign
-    global all_things_detected
+    global signs_count
     global det
 
     for newPoint in points.markers:
@@ -305,7 +194,7 @@ def sign_detection(points):
 
         if min_point == None:
             detect_sign_true = 0     #when we detect new sign, we dont want recognizer to work immediately, but wait for this to become 1 (which means: sign detected!!)
-            det[str(xp) + ";" + str(yp) + ";" + str(zp)] = {'count': 1, 'detected': False, 'name': None, 'point': str(xp) + ";" + str(yp) + ";" + str(zp)}
+            det[str(xp) + ";" + str(yp) + ";" + str(zp)] = {'count': 1, 'detected': False, 'name': None, 'face': False, 'point': str(xp) + ";" + str(yp) + ";" + str(zp)}
         elif min_point != "not":
             min_point['count'] += 1
             if min_point['count'] > 25:
@@ -317,14 +206,14 @@ def sign_detection(points):
                 #so we detected a new sign - let's reset the counters and ask recognizer what he sees
                 detect_sign_true = 1     #we are indeed looking at the face - let's allow recognizer to start counting!
                 det_entry_sign = min_point       # global variable, will save name of the person to it once the point is recognized
-                for key1 in all_things_detected:            #reset to zero
-                    all_things_detected[key1][count] = 0
+                for key1 in signs_count:            #reset to zero
+                    signs_count[key1][count] = 0
 
         else:
             pass
 
 def recognized_sign(data):
-    global all_things_detected
+    global signs_count
     global detect_sign_true
     global det_entry_sign
 
@@ -335,15 +224,15 @@ def recognized_sign(data):
     thresh_reached = False
     
     if detect_sign_true == 1 and det_entry_sign['name'] == None:
-        if name in  all_things_detected:
-            all_things_detected[name][count] += 1
-            print all_things_detected[name][name]+": "+all_things_detected[name][count]
-            if all_things_detected[name][count] > thresh:
+        if name in  signs_count:
+            signs_count[name][count] += 1
+            print signs_count[name][name]+": "+signs_count[name][count]
+            if signs_count[name][count] > thresh:
                 det_entry_sign['name'] = name
-                print "adding to the dictionary!"
+                print "adding name to the dictionary!"
                 # find the closest node in graph
         else:
-            all_things_detected[name] = {'count': 1, 'face': False, 'name': name}
+            signs_count[name] = {'count': 1, 'face': False, 'name': name}
 
 
 
