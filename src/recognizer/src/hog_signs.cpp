@@ -15,7 +15,7 @@
 #include <sensor_msgs/image_encodings.h>
 #include <cv_bridge/cv_bridge.h>
 #include <detection_msgs/Detection.h>
-
+#include <std_msgs/String.h>
 using namespace std;
 using namespace cv;
 using namespace ros;
@@ -25,6 +25,7 @@ using namespace ros;
 
 Size reference_size(64, 128);
 Subscriber sub;
+Publisher pub;
 vector<string> classes;
 vector<Mat> HOGFeatures;
 Mat trainSVM, labels;
@@ -194,6 +195,11 @@ void recognize(const detection_msgs::DetectionConstPtr &det) {
 			// cout << classes[i] << " " << confidence << endl;
 		}
 		cout << "final: " << minVal << " " << classes[maxID] << endl << endl;
+		std_msgs::String to_pub;
+		std::stringstream ss;
+    	ss << classes[maxID];
+  	    to_pub.data = ss.str();
+		pub.publish(to_pub);
   }
 }
 int main(int argc, char **argv) {
@@ -216,6 +222,7 @@ int main(int argc, char **argv) {
 
 	
 	ROS_INFO("Waiting for a sign to recognize ...");
+	pub = node.advertise<std_msgs::String>("recognizer/signs", 1000);
 	sub = node.subscribe("/detector/traffic_signs", 100, recognize);
 	spin();
 	return 0;
