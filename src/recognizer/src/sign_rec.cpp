@@ -65,6 +65,11 @@ void recognize(const detection_msgs::DetectionConstPtr &det) {
     // TODO: 
 		cout << "I recognized: " << classes[label] <<  " with confidence " << confidence << endl;
     // ros::ROS_INFO("I recognized: " + classes[label]);
+        std_msgs::String msg;
+        stringstream ss;
+        ss << classes[label];
+        msg.data = ss.str();
+        pub.publish(msg);
 	}
 }
 
@@ -86,6 +91,7 @@ int main(int argc, char **argv) {
 	
 	ROS_INFO("Waiting for a sign to recognize ...");
 	sub = node.subscribe("/detector/traffic_signs", 100, recognize);
+	pub = node.advertise<std_msgs::String>("/sign_recognizer/sign", 1000);
 	spin();
 	return 0;
 }
