@@ -7,10 +7,16 @@ from std_msgs.msg import String, ColorRGBA
 from geometry_msgs.msg import *
 from visualization_msgs.msg import Marker, MarkerArray
 from sound_play.msg import SoundRequest
+from tf2_msgs import TFMmessage
+
+status = 0
 
 voice_pub = None
 markers_pub = None
+cancel_pub = None
+goto_pub = None
 det = {}
+search_name = None
 
 #faces
 detected = 0
@@ -26,7 +32,7 @@ sign_detected = 0
 detect_sign_true = 0
 det_entry_sign = None
 signs_count = {}
-color_map = {'peter': ColorRGBA(128, 255, 0, 1), 'tina': ColorRGBA(51, 51, 255, 1), 'harry': ColorRGBA(51, 51, 255, 1), 'forest': ColorRGBA(255, 128, 0, 1), 'filip': ColorRGBA(102, 51, 0, 1), 'kim': ColorRGBA(153, 0, 153, 1), 'mathew': ColorRGBA(255, 255, 0, 1), 'scarlett': ColorRGBA(255, 0, 127, 1), 'ellen': ColorRGBA(0, 255, 255, 1)}
+color_map = {'honk': ColorRGBA(85, 96, 240, 1), 'left': ColorRGBA(16, 31, 239, 1), 'limit': ColorRGBA(249, 98, 98, 1), 'oneway': ColorRGBA(245, 1, 1, 1), 'stop': ColorRGBA(152, 6, 6, 1), 'peter': ColorRGBA(128, 255, 0, 1), 'tina': ColorRGBA(51, 51, 255, 1), 'harry': ColorRGBA(51, 51, 255, 1), 'forest': ColorRGBA(255, 128, 0, 1), 'filip': ColorRGBA(102, 51, 0, 1), 'kim': ColorRGBA(153, 0, 153, 1), 'mathew': ColorRGBA(255, 255, 0, 1), 'scarlett': ColorRGBA(255, 0, 127, 1), 'ellen': ColorRGBA(0, 255, 255, 1)}
 
 
 def min_distance_all(tokens, find):
@@ -83,10 +89,14 @@ def speak_robot(str_speech):
 
 
 def recognized_face(data):
-    global markers_pub, detect_true, sound_sent, color, det_entry, faces_count, face_marker
+    global markers_pub, detect_true, sound_sent, color, det_entry, faces_count, face_marker, search_name, status, cancel_pub
 
     name = data.data
     print name
+
+    #when we have the position, but looking for the rotation (TO-DO: wait for the detection first)
+    if status == 1 and search_name == name:
+        cancel_pub.publish("cancel")
     
     thresh = 15
     thresh_reached = False
@@ -102,7 +112,6 @@ def recognized_face(data):
         else:
             faces_count[name] = {'count': 1, 'face': False, 'name': name}
     
-    publish_faces()
 
 def detection_thresh(points):
     global det, detected, detect_true, sound_sent, det_entry, faces_count
@@ -220,9 +229,10 @@ def recognized_sign(data):
         else:
             signs_count[name] = {'count': 1, 'face': False, 'name': name}
 
-    publish_faces()
-
+    
 def voice_action(data):
+    global search_name
+
     print "You said: "+data.data
 
     #now do sth with that data!
@@ -240,6 +250,7 @@ def voice_action(data):
     colour_building = None
     colour_street = None
     name = min_distance_one(tokens[0], names)
+    search_name = name
 
     building = min_distance_all(tokens, objects)
     if building[0] != None:
@@ -250,11 +261,12 @@ def voice_action(data):
         colour_street = min_distance_one(tokens[street[1]-1], colours)
 
     print "Mission Impossible: %s %s %s %s %s"%(name,  colour_building, building[0], colour_street, street[0])
-    speak_robot("Where would you like to go, " + name)
+    #speak_robot("Where would you like to go, " + name)
+    street_pub.publish(colour_street)
+
 
 def publish_faces():
-    global det
-    global markers_pub
+    global det, markers_pub, search_name, goto_pub, cancel_pub, status
     
     markers = []
     marker = Marker()
@@ -265,6 +277,14 @@ def publish_faces():
 
         name = det[key]['name']
         marker = det[key]['marker']
+
+        #lets check if we already have the face we are looking for
+        if search_name != None and status == 0:
+            if name == search_name:
+                send_pose = marker.pose
+                cancel_pub.publish("cancel")
+                goto_pub.publish(send_pose)
+                status = 1
 
         if name in color_map:
             marker.color = color_map[name]
@@ -277,16 +297,19 @@ def publish_faces():
 
 
 def face_recognizer():
-    global markers_pub
-    global voice_pub
+    global markers_pub, voice_pub, cancel_pub, street_pub, goto_pub
+
     rospy.init_node('face_recognizer', anonymous=True)
     markers_pub = rospy.Publisher('visualization/markers', MarkerArray)
-    voice_pub = rospy.Publisher('/robotsound', SoundRequest, queue_size=1)
+    cancel_pub = rospy.Publisher('/cancel', String, queue_size=100)
+    street_pub = rospy.Publisher('/search/street', String, queue_size=100)
+    goto_pub = rospy.Publisher('/goto', pose, queue_size=100)
+    voice_pub = rospy.Publisher('/robotsound', SoundRequest, queue_size=100)
     rospy.Subscriber('/transformedMarkers/faces', MarkerArray, detection_thresh)
     rospy.Subscriber('/transformedMarkers/signs', MarkerArray, sign_detection)
     rospy.Subscriber('/recognizer/signs', String, recognized_sign)
     rospy.Subscriber('/recognizer/face', String, recognized_face)
-    #rospy.Subscriber('/', MarkerArray, detection_thresh)
+    rospy.Subscriber('/tf', TFMmessage, publish_faces)
     rospy.Subscriber("/command", String, voice_action)
     rospy.spin()
 
