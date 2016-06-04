@@ -22,16 +22,9 @@
   </include>
   
   <!-- if failing please comment until resolved and run with: `rosrun pcl transformMapper.py` -->
-  <node pkg="pcl" type="transformMapper.py" name="transformMapperFaces">
-    <!-- <param name="node_name" value="face_transform"/> -->
-    <param name="inTopic" value="/facedetector/markers"/>
-    <param name="outTopic" value="/transformedMarkers/faces"/>
+  <node pkg="pcl" type="transformMapper.py" name="transformMapper">
+    <!-- no args required -->
   </node>
 
-  <!-- <node pkg="pcl" type="transformMapper.py" name="transformMapperSigns"> -->
-    <!-- <param name="node_name" value="sign_transform"/> -->
-    <!-- <param name="inTopic" value="/signdetector/markers"/> -->
-    <!-- <param name="outTopic" value="/transformedMarkers/signs"/> -->
-  <!-- </node> -->
 </launch>
 
