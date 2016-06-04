@@ -108,7 +108,7 @@ def recognized_face(data):
     
 
 def detection_thresh(points):
-    global peter, tina, harry, forest, filip, kim, matthew, scarlett, ellen, current_point, det, detected, detect_true, sound_sent, det_entry
+    global current_point, det, detected, detect_true, sound_sent, det_entry, faces_count
 
     for newPoint in points.markers:
         current_point = newPoint
@@ -147,15 +147,8 @@ def detection_thresh(points):
                 detect_true = 1     #we are indeed looking at the face - let's allow recognizer to start counting!
                 det_entry = min_point       # global variable, will save name of the person to it once the point is recognized
                 sound_sent = 0
-                peter = 0
-                tina = 0
-                harry = 0
-                forest = 0
-                filip = 0
-                kim = 0
-                matthew = 0
-                scarlett = 0
-                ellen = 0
+                for key1 in faces_count:            #reset to zero
+                    faces_count[key1][count] = 0
                 
 
         else:
