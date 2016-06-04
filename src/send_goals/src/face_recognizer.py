@@ -307,7 +307,7 @@ def sign_detection(points):
             min_point['count'] += 1
             if min_point['count'] > 25:
                 min_point['detected'] = True
-                detected += 1
+                sign_detected += 1
                 print "sign" + str(detected) + " detected!!!!\n" + str(min_point)
                 print det
                 
