@@ -34,6 +34,8 @@ det_signs = {}
 sign_detected = 0
 detect_sign_true = 0
 det_entry_sign = None
+all_things_detected = {}
+
 
 def min_distance_all(tokens, find):
     name = None
@@ -277,7 +279,8 @@ def sign_detection(points):
     global det_signs
     global sign_detected
     global det_entry_sign
-    global all_signs_detected
+    global all_things_detected
+    global det
 
     for newPoint in points.markers:
         position = newPoint.pose.position
@@ -314,14 +317,14 @@ def sign_detection(points):
                 #so we detected a new sign - let's reset the counters and ask recognizer what he sees
                 detect_sign_true = 1     #we are indeed looking at the face - let's allow recognizer to start counting!
                 det_entry_sign = min_point       # global variable, will save name of the person to it once the point is recognized
-                for key in all_signs_detected:            #reset to zero
-                    all_signs_detected[key][count] = 0
+                for key1 in all_things_detected:            #reset to zero
+                    all_things_detected[key1][count] = 0
 
         else:
             pass
 
 def recognized_sign(data):
-    global all_signs_detected
+    global all_things_detected
     global detect_sign_true
     global det_entry_sign
 
@@ -332,13 +335,15 @@ def recognized_sign(data):
     thresh_reached = False
     
     if detect_sign_true == 1 and det_entry_sign['name'] == None:
-        if name in  all_signs_detected:
-            all_signs_detected[name][count] += 1
-            if all_signs_detected[name][count] > thresh:
+        if name in  all_things_detected:
+            all_things_detected[name][count] += 1
+            print all_things_detected[name][name]+": "+all_things_detected[name][count]
+            if all_things_detected[name][count] > thresh:
                 det_entry_sign['name'] = name
+                print "adding to the dictionary!"
                 # find the closest node in graph
         else:
-            all_signs_detected[name] = {'count': 1, 'name': name}
+            all_things_detected[name] = {'count': 1, 'face': False, 'name': name}
 
 
 
