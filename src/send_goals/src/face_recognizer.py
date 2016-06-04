@@ -83,14 +83,11 @@ def speak_robot(str_speech):
 
 
 def recognized_face(data):
-    global current_point, markers_pub, detect_true, sound_sent, color, det_entry, faces_count, face_marker
+    global markers_pub, detect_true, sound_sent, color, det_entry, faces_count, face_marker
 
     name = data.data
     print name
     
-    markers = []
-    marker = Marker()
-    marker = current_point
     thresh = 15
     thresh_reached = False
     
@@ -105,7 +102,7 @@ def recognized_face(data):
         else:
             faces_count[name] = {'count': 1, 'face': False, 'name': name}
     
-    
+    publish_faces()
 
 def detection_thresh(points):
     global det, detected, detect_true, sound_sent, det_entry, faces_count
@@ -133,7 +130,7 @@ def detection_thresh(points):
 
         if min_point == None:
             detect_true = 0     #when we detect new face, we dont want recognizer to work immediately, but wait for this to become 1 (which means: face detected!!)
-            det[str(xp) + ";" + str(yp) + ";" + str(zp)] = {'count': 1, 'detected': False, 'name': None, 'marker': None, face': True, 'point': str(xp) + ";" + str(yp) + ";" + str(zp)}
+            det[str(xp) + ";" + str(yp) + ";" + str(zp)] = {'count': 1, 'detected': False, 'name': None, 'marker': None, 'face': True, 'point': str(xp) + ";" + str(yp) + ";" + str(zp)}
         elif min_point != "not":
             min_point['count'] += 1
             if min_point['count'] > 25:
@@ -182,7 +179,7 @@ def sign_detection(points):
 
         if min_point == None:
             detect_sign_true = 0     #when we detect new sign, we dont want recognizer to work immediately, but wait for this to become 1 (which means: sign detected!!)
-            det[str(xp) + ";" + str(yp) + ";" + str(zp)] = {'count': 1, 'detected': False, 'name': None, 'marker': None, face': False, 'point': str(xp) + ";" + str(yp) + ";" + str(zp)}
+            det[str(xp) + ";" + str(yp) + ";" + str(zp)] = {'count': 1, 'detected': False, 'name': None, 'marker': None, 'face': False, 'point': str(xp) + ";" + str(yp) + ";" + str(zp)}
         elif min_point != "not":
             min_point['count'] += 1
             if min_point['count'] > 25:
@@ -223,7 +220,7 @@ def recognized_sign(data):
         else:
             signs_count[name] = {'count': 1, 'face': False, 'name': name}
 
-
+    publish_faces()
 
 def voice_action(data):
     print "You said: "+data.data
@@ -258,7 +255,7 @@ def voice_action(data):
 def publish_faces():
     global det
     global markers_pub
-
+    
     markers = []
     marker = Marker()
 
@@ -279,7 +276,6 @@ def publish_faces():
     markers_pub.publish(markers)
 
 
-
 def face_recognizer():
     global markers_pub
     global voice_pub
@@ -290,8 +286,8 @@ def face_recognizer():
     rospy.Subscriber('/transformedMarkers/signs', MarkerArray, sign_detection)
     rospy.Subscriber('/recognizer/signs', String, recognized_sign)
     rospy.Subscriber('/recognizer/face', String, recognized_face)
+    #rospy.Subscriber('/', MarkerArray, detection_thresh)
     rospy.Subscriber("/command", String, voice_action)
-    publish_faces()
     rospy.spin()
 
 if __name__ == '__main__':
