@@ -43,17 +43,16 @@ class MarkerTransformer():
     def __init__(self):
         #self.joined_sub = message_filters.TimeSynchronizer([self.faces_sub, self.camera_sub], 30)
         #self.joined_sub.registerCallback(self.faces_callback)
-        print rospy.get_param("inTopic")
-        print rospy.get_param("outTopic")
-        self.subs_marker = rospy.Subscriber("/facedetector/markers", MarkerArray, self.faces_callback)
-        self.markers_pub = rospy.Publisher('/pcl/transformedMarkers', MarkerArray, queue_size=10)
+        # rospy.loginfo(rospy.get_param_names())
+        self.subs_marker = rospy.Subscriber(rospy.get_param("~inTopic"), MarkerArray, self.faces_callback)
+        self.markers_pub = rospy.Publisher(rospy.get_param("~outTopic"), MarkerArray, queue_size=10)
         self.listener = tf.TransformListener()
 
 
 # Main function.
 if __name__ == '__main__':
 
-    rospy.init_node('facemapper_transformer')
+    rospy.init_node('facemapper_transformer')        
     try:
         fd = MarkerTransformer()
         rospy.spin()
