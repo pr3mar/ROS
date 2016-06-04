@@ -102,7 +102,7 @@ def recognized_face(data):
     
     # TO-DO: stop voting once the thresh is reached!
     
-    if detect_true == 1 and det_entry['name'] == None:
+    if detect_true == 1:
         if name == 'peter':
             peter += 1
             print peter
@@ -243,7 +243,7 @@ def detection_thresh(points):
 
         if min_point == None:
             detect_true = 0     #when we detect new face, we dont want recognizer to work immediately, but wait for this to become 1 (which means: face detected!!)
-            det[str(xp) + ";" + str(yp) + ";" + str(zp)] = {'count': 1, 'detected': False, 'name' = None, 'point': str(xp) + ";" + str(yp) + ";" + str(zp)}
+            det[str(xp) + ";" + str(yp) + ";" + str(zp)] = {'count': 1, 'detected': False, 'name': None, 'point': str(xp) + ";" + str(yp) + ";" + str(zp)}
         elif min_point != "not":
             min_point['count'] += 1
             if min_point['count'] > 25:
@@ -277,7 +277,7 @@ def sign_detection(points):
     global det_signs
     global sign_detected
     global det_entry_sign
-    global signs_count
+    global all_signs_detected
 
     for newPoint in points.markers:
         position = newPoint.pose.position
@@ -302,7 +302,7 @@ def sign_detection(points):
 
         if min_point == None:
             detect_sign_true = 0     #when we detect new sign, we dont want recognizer to work immediately, but wait for this to become 1 (which means: sign detected!!)
-            det[str(xp) + ";" + str(yp) + ";" + str(zp)] = {'count': 1, 'detected': False, 'name' = None, 'point': str(xp) + ";" + str(yp) + ";" + str(zp)}
+            det[str(xp) + ";" + str(yp) + ";" + str(zp)] = {'count': 1, 'detected': False, 'name': None, 'point': str(xp) + ";" + str(yp) + ";" + str(zp)}
         elif min_point != "not":
             min_point['count'] += 1
             if min_point['count'] > 25:
@@ -314,14 +314,14 @@ def sign_detection(points):
                 #so we detected a new sign - let's reset the counters and ask recognizer what he sees
                 detect_sign_true = 1     #we are indeed looking at the face - let's allow recognizer to start counting!
                 det_entry_sign = min_point       # global variable, will save name of the person to it once the point is recognized
-                for key in signs_count:            #reset to zero
-                    signs_count[key][count] = 0
+                for key in all_signs_detected:            #reset to zero
+                    all_signs_detected[key][count] = 0
 
         else:
             pass
 
 def recognized_sign(data):
-    global signs_count
+    global all_signs_detected
     global detect_sign_true
     global det_entry_sign
 
@@ -332,13 +332,13 @@ def recognized_sign(data):
     thresh_reached = False
     
     if detect_sign_true == 1 and det_entry_sign['name'] == None:
-        if signs_count[name]:
-            signs_count[name][count] += 1
-            if signs_count[name][count] > thresh:
+        if name in  all_signs_detected:
+            all_signs_detected[name][count] += 1
+            if all_signs_detected[name][count] > thresh:
                 det_entry_sign['name'] = name
                 # find the closest node in graph
         else:
-            det[name] = {'count': 1, 'name': name}
+            all_signs_detected[name] = {'count': 1, 'name': name}
 
 
 
@@ -372,7 +372,7 @@ def voice_action(data):
     print "Mission Impossible: %s %s %s %s %s"%(name,  colour_building, building[0], colour_street, street[0])
     speak_robot("Where would you like to go, " + name)
 
-def publish_faces:
+def publish_faces():
     global det
     global markers_pub
 
