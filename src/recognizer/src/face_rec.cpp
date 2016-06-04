@@ -60,7 +60,7 @@ void recognize(const detection_msgs::DetectionConstPtr &det) {
   Mat resized;
   cvtColor(cv_ptr -> image, resized, CV_BGR2GRAY, 1);
   resize(resized, resized, reference_size);
-  cout << resized.cols << " " << resized.rows << endl;
+  // cout << resized.cols << " " << resized.rows << endl;
   Mat sample = resized;
   if (!sample.empty()) {
       int label;
