@@ -4,8 +4,9 @@ import nltk
 from nltk.metrics import edit_distance
 import rospy
 import actionlib
-from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal, MoveBaseActionGoal, cancelGoal
+from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal, MoveBaseActionGoal
 from std_msgs.msg import String, ColorRGBA
+from actionlib_msgs.msg import GoalID
 from geometry_msgs.msg import *
 from visualization_msgs.msg import Marker, MarkerArray
 from sound_play.msg import SoundRequest
@@ -369,7 +370,7 @@ def face_recognizer():
     alib = actionlib.SimpleActionClient("move_base", MoveBaseAction)
     rospy.init_node('face_recognizer', anonymous=True)
     markers_pub = rospy.Publisher('/viz/markers', MarkerArray, queue_size=100)
-    cancel_pub = rospy.Publisher('/move_base/cancel', String, queue_size=100)
+    cancel_pub = rospy.Publisher('/move_base/cancel', GoalID, queue_size=100)
     street_pub = rospy.Publisher('/search/street', String, queue_size=100)
     goto_pub = rospy.Publisher('/goto', Pose, queue_size=100)
     slow_pub = rospy.Publisher('/sign/slow', String, queue_size=100)
