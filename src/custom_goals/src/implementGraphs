@@ -105,6 +105,8 @@ def send(goals):
 				rospy.loginfo("[rot] CANCELED THE FUCKING GOALS")
 				goals = []
 				return
+	if preset:
+		reached.publish(String("true"))
 	setGoal = False
 
 #localize by current position of rooomba
