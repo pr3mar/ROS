@@ -34,6 +34,7 @@ det_entry = None
 det_signs = {}
 sign_detected = 0
 sign_detected_again = 0
+sign_detected_again_count = 0
 detect_sign_true = 0
 det_entry_sign = None
 signs_count = {}
@@ -101,7 +102,7 @@ def recognized_face(data):
 
     #when we have the position, but looking for the rotation (TO-DO: wait for the detection first)
     if status == 1 and search_name == name:
-        cancel_pub.publish("cancel")
+        cancel_pub.publish("true")
     
     thresh = 15
     thresh_reached = False
@@ -168,7 +169,7 @@ def detection_thresh(points):
 
 def sign_detection(points):
     #the same as for the face detection
-    global detect_sign_true, det_signs, sign_detected, det_entry_sign, signs_count, det, sign_detected_again
+    global detect_sign_true, det_signs, sign_detected, det_entry_sign, signs_count, det, sign_detected_again, sign_detected_again_count
 
     for newPoint in points.markers:
         position = newPoint.pose.position
@@ -188,10 +189,19 @@ def sign_detection(points):
             if dist_x <= mind and dist_y <= mind and dist_z <= mind:
                 if not det[key]['detected']:
                     min_point = det[key]
+                    sign_detected_again_count = 0
                 else:
                     # we already have that point detected, lets count if it's really that point
                     min_point = "not"
-                    sign_detected_again += 1
+                    sign_detected_again_count += 1
+                    if sign_detected_again_count == 25:
+                        sign_detected_again = 1
+                        for key1 in signs_count:            #reset to zero
+                            signs_count[key1]['count'] = 0
+
+            else:
+                sign_detected_again_count = 0                
+
 
         if min_point == None:
             detect_sign_true = 0     #when we detect new sign, we dont want recognizer to work immediately, but wait for this to become 1 (which means: sign detected!!)
@@ -215,9 +225,7 @@ def sign_detection(points):
             pass
 
 def recognized_sign(data):
-    global signs_count
-    global detect_sign_true
-    global det_entry_sign
+    global signs_count, detect_sign_true, det_entry_sign, sign_detected_again, honk_pub
 
     name = data.data
     #print name
@@ -225,15 +233,21 @@ def recognized_sign(data):
     thresh = 15
     thresh_reached = False
     
-    if detect_sign_true == 1 and det_entry_sign['name'] == None:
+    if detect_sign_true == 1 or sign_detected_again == 1:
         if name in  signs_count:
             signs_count[name]['count'] += 1
             #print signs_count[name]['name']+": "+str(signs_count[name]['count'])
             if signs_count[name]['count'] > thresh:
-                det_entry_sign['name'] = name
-                print "adding name to the dictionary!: ", det_entry_sign['name'], det_entry_sign['point']
+                if detect_sign_true == 1 and det_entry_sign['name'] == None:
+                    detect_sign_true = 0
+                    det_entry_sign['name'] = name
+                    print "adding name to the dictionary!: ", det_entry_sign['name'], det_entry_sign['point']
                 
-                # we publish to the appropriate topic
+                else:
+                    # we publish to the appropriate topic
+                    print "we already have that sign, but we see it again!"
+                    if name == 'honk':
+                        honk_pub.publish("true")
                 
         else:
             signs_count[name] = {'count': 1, 'face': False, 'name': name}
