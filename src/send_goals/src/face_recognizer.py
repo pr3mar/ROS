@@ -9,7 +9,7 @@ from visualization_msgs.msg import Marker, MarkerArray
 from sound_play.msg import SoundRequest
 import tf
 
-status = 0
+status = 0      # 0 = looking for the face, 1 = approaching the face, 2 = waiting for command
 
 voice_pub = None
 markers_pub = None
@@ -97,14 +97,15 @@ def speak_robot(str_speech):
 
 
 def recognized_face(data):
-    global markers_pub, detect_true, sound_sent, color, det_entry, faces_count, face_marker, search_name, status, cancel_pub
+    global markers_pub, detect_true, sound_sent, color, det_entry, faces_count, face_marker, search_name, status, cancel_pub, voice_pub
 
     name = data.data
     #print name
 
     #when we have the position, but looking for the rotation (TO-DO: wait for the detection first)
     if status == 1 and search_name == name:
-        cancel_pub.publish("true")
+        #cancel_pub.publish("true")
+        speak_robot(search_name + ", where would you like to go?")
         status = 2
     
     thresh = 15
@@ -227,6 +228,7 @@ def sign_detection(points):
         else:
             pass
 
+
 def recognized_sign(data):
     global signs_count, detect_sign_true, det_entry_sign, sign_detected_again, honk_pub, stop_pub, slow_pub, oneway_pub
 
@@ -297,7 +299,7 @@ def voice_action(data):
     #street_pub.publish(colour_street)
     
     #we reset everything because we received a new goal
-    cancel_pub.publish("true")
+    #cancel_pub.publish("true")
     sent_street = 0
     status = 0
 
@@ -321,6 +323,7 @@ def publish_faces(non):
                 print "Name we are looking for is the same as the name in our dict. Sending directions."
                 send_pose = marker.pose
                 cancel_pub.publish("true")
+                #rospy.
                 goto_pub.publish(send_pose)
                 status = 1
                 sent_street = 1     #we don't have to send street color, if we know where the face is
@@ -334,8 +337,9 @@ def publish_faces(non):
         
     markers_pub.publish(markers)
     
-    if sent_street == 0 and colour_street != None:
+    if sent_street == 0 and colour_street != None and status == 0:
         print "sending goal!"
+        cancel_pub.publish("true")
         street_pub.publish(colour_street)
         sent_street = 1
 
