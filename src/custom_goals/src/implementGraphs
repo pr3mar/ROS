@@ -158,7 +158,7 @@ def resetSpeed():
 if __name__ == '__main__':
 	try:
 		test = False
-		doROS = False
+		doROS = True
 		if test:
 			# solely for testing purposes:
 			goals = []
