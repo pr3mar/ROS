@@ -111,7 +111,7 @@ def recognized_face(data):
     #when we have the position, but looking for the rotation
     if status == 2 and search_name == name:
         goal  = GoalID()
-        cancel_pub.publish(goal)
+        #cancel_pub.publish(goal)
         #alib.cancel_goal()
         speak_robot(search_name + ", where would you like to go?")
         status = 3
@@ -362,9 +362,9 @@ def publish_faces(non):
     if sent_street == 0 and colour_street != None and status == 0:
         print "sending goal!"
         goal = GoalID()
-        cancel_pub.publish(goal)
+        #cancel_pub.publish(goal)
         #alib.cancelGoal()
-        print "canceling previous goal!"
+        #print "canceling previous goal!"
         street_pub.publish(colour_street)
         sent_street = 1
 
