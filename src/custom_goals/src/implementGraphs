@@ -307,7 +307,7 @@ if __name__ == '__main__':
 				rospy.Subscriber("/sign/stop", String, stop)
 				rospy.Subscriber("/sign/honk", String, honk)
 				rospy.Subscriber("/sign/oneway", Pose, removeEdges)
-				# # sendAllGoals() # just to explore the map
+				#sendAllGoals() # just to explore the map
 			
 				rospy.spin()
 

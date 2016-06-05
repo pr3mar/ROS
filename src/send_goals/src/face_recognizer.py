@@ -105,6 +105,7 @@ def recognized_face(data):
     #when we have the position, but looking for the rotation (TO-DO: wait for the detection first)
     if status == 1 and search_name == name:
         cancel_pub.publish("true")
+        status = 2
     
     thresh = 15
     thresh_reached = False
@@ -132,7 +133,7 @@ def detection_thresh(points):
         mind = 0.5
         min_point = None
         if zp > 1:
-            print xp, yp, zp
+            print "false face: ", xp, yp, zp
             continue
         for key in det:
             (x, y, z) = key.split(';')
@@ -181,7 +182,7 @@ def sign_detection(points):
         mind = 0.5
         min_point = None
         if zp > 1:
-            print xp, yp, zp
+            print "false sign: ", xp, yp, zp
             continue
         for key in det:
             (x, y, z) = key.split(';')
@@ -247,7 +248,7 @@ def recognized_sign(data):
                 
                 else:
                     # we publish to the appropriate topic
-                    print "we already have that sign, but we see it again!"
+                    #print "we already have that sign, but we see it again!"
                     if name == 'honk':
                         honk_pub.publish("true")
                     elif name=='stop':
@@ -262,7 +263,7 @@ def recognized_sign(data):
 
     
 def voice_action(data):
-    global search_name, colour_street, street_pub
+    global search_name, colour_street, street_pub, sent_street, status, cancel_pub
 
     #print "You said: "+data.data
 
@@ -294,7 +295,11 @@ def voice_action(data):
     print "Mission Impossible: %s %s %s %s %s"%(name,  colour_building, building[0], colour_street, street[0])
     #speak_robot("Where would you like to go, " + name)
     #street_pub.publish(colour_street)
-
+    
+    #we reset everything because we received a new goal
+    cancel_pub.publish("true")
+    sent_street = 0
+    status = 0
 
 def publish_faces(non):
     global det, markers_pub, search_name, goto_pub, cancel_pub, status, colour_street, sent_street, street_pub
@@ -328,8 +333,9 @@ def publish_faces(non):
         markers.append(marker)
         
     markers_pub.publish(markers)
-
-    if sent_street == 0:
+    
+    if sent_street == 0 and colour_street != None:
+        print "sending goal!"
         street_pub.publish(colour_street)
         sent_street = 1
 
