@@ -90,7 +90,9 @@ def send(goals):
 		result = alib.wait_for_result(rospy.Duration(90.0))
 		state = alib.get_state()
 		print "result = ", result, ", state = ", state
-		#if result and state == GoalStatus.SUCCEEDED:
+		if canceled:
+			break
+        #if result and state == GoalStatus.SUCCEEDED:
 		#	result = True
 		#else:
 		#	rospy.loginfo("FAILED TO REACH GOAL!!!")
@@ -118,23 +120,26 @@ def localizeRoomba(poseWithCov): # get data from /amcl_pose
 
 # search on street X
 def searchStreets(street):
-	global currentLocation, colorMap
+	global currentLocation, colorMap, canceled
+	canceled = False
+	print "going to explore a street"
 	if street.data in colorMap:
 		streets = graph.getByColorSorted(currentLocation.goal.target_pose.pose, colorMap[street.data])
 		#print streets
 		path = graph.Astar(currentLocation, streets[0][0])
 		path = path + [x[0].id for x in streets[1:]]
-		print path
+		print path, "canceled", canceled
 		send(path)
 	
 # go to a specific position (where a face is located)
 def gotoPose(pose):
-	global currentLocation
+	global currentLocation, canceled
+	canceled = False
 	print "going to a predefined position"
 	nearest_goal_position = graph.localize(pose)
 	goal_position = nearest_goal_position[0]
 	path = graph.Astar(currentLocation, goal_position)[1:]
-	print path
+	print path, "canceled", canceled
 	send(path)
 
 # recognized sign (oneway) is situated in pose

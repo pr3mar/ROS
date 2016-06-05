@@ -104,8 +104,8 @@ def recognized_face(data):
 
     #when we have the position, but looking for the rotation (TO-DO: wait for the detection first)
     if status == 1 and search_name == name:
-        cancel_pub.publish("true")
-        voice_pub.publish(search_name + ", where would you like to go?")
+        #cancel_pub.publish("true")
+        speak_robot(search_name + ", where would you like to go?")
         status = 2
     
     thresh = 15
@@ -323,6 +323,7 @@ def publish_faces(non):
                 print "Name we are looking for is the same as the name in our dict. Sending directions."
                 send_pose = marker.pose
                 cancel_pub.publish("true")
+                #rospy.
                 goto_pub.publish(send_pose)
                 status = 1
                 sent_street = 1     #we don't have to send street color, if we know where the face is
