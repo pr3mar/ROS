@@ -116,7 +116,7 @@ def recognized_face(data):
         speak_robot(search_name + ", where would you like to go?")
         status = 3
     
-    thresh = 15
+    thresh = 5
     thresh_reached = False
     
     if name in faces_count:
@@ -169,7 +169,7 @@ def detection_thresh(points):
             det[str(xp) + ";" + str(yp) + ";" + str(zp)] = {'count': 1, 'detected': False, 'name': None, 'marker': None, 'face': True, 'point': str(xp) + ";" + str(yp) + ";" + str(zp)}
         elif min_point != "not":
             min_point['count'] += 1
-            if min_point['count'] > 25:
+            if min_point['count'] > 10:
                 min_point['detected'] = True
                 min_point['marker'] = newPoint      #we save the last marker
                 detected += 1
