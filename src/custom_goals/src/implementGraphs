@@ -72,9 +72,9 @@ def send(goals):
 	if setGoal:
 		rospy.loginfo("CANCELING THE PREVIOUSLY SENDT GOALS")
 		alib.cancel_goal()
-		time = rospy.Duration(5.0)
-		while(time != rospy.Time.now()):
-			print "waiting"
+		time = rospy.get_time() + rospy.Duration(1.0).to_sec()
+		while(time > rospy.get_time()):
+			#print "time = ", time, "time now = ", rospy.get_time() 
 			pass
 	if(alib == None):
 		rospy.loginfo("WTF? Actionlib is None, send(goals)")
@@ -193,7 +193,7 @@ def slow(msg):
 def stop(msg):
 	global reconf
 	if msg.data == "true":
-		reconf.update_configuration({"speed_lim_v": 0.0})
+		reconf.update_configuration({"max_vel_x": 0.1})
 		reconf.update_configuration({"max_rot_vel": 0.0})
 		#rospy.Timer(rospy.Duration(10), resetSpeed)
 
