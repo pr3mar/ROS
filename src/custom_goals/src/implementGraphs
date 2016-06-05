@@ -26,6 +26,7 @@ poses_to_remove = {"3-4": [(3, 4), False], "14-16": [(14, 16), False]}
 reconf = None
 canceled = False
 reached = None
+preset = False
 
 # maybe not usefull at all, just for exploring
 def sendAllGoals():
@@ -44,11 +45,6 @@ def sendAllGoals():
 		result = alib.wait_for_result(rospy.Duration(90.0))
 		state = alib.get_state()
 		print "result = ", result, ", state = ", state
-		#if result and state == GoalStatus.SUCCEEDED:
-		#	result = True
-		#else:
-		#	rospy.loginfo("FAILED TO REACH GOAL")
-		#	alib.cancel_goal()
 		i += 1
 
 # cancel all goals if message is true
@@ -67,28 +63,16 @@ def cancel(msg):
 # just a wrapper:
 # send goals to the robot, given a list of node ids
 def send(goals):
-	global setGoal, globGoals, canceled, reached, alib
-	# globGoals = goals
-	#if setGoal:
-	#	rospy.loginfo("CANCELING THE PREVIOUSLY SENDT GOALS")
-	#	alib.cancel_goal()
-	#	time = rospy.get_time() + rospy.Duration(1.0).to_sec()
-	#	while(time > rospy.get_time()):
-			#print "time = ", time, "time now = ", rospy.get_time() 
-	#		pass
+	global setGoal, globGoals, canceled, reached, alib, preset
 	if(alib == None):
 		rospy.loginfo("WTF? Actionlib is None, send(goals)")
 		return
 	rospy.loginfo("[new] sending " + str(goals))
-	# print "entered send(goals)"
 	setGoal = True
 	state = -1
 	rots = [(0, 0, 90 * 3.1415/180), (0, 0, 90 * 3.1415/180), (0, 0, 180 * 3.1415/180), (0, 0, 270 * 3.1415/180), (0, 0, 0)]
 	print goals
 	for nodeID in goals:
-		#print "canceled?", canceled
-		# if canceled:
-			# break
 		node = graph.getNodeByID(nodeID)
 		rospy.loginfo("Sending graph goal: " + str(nodeID))
 		goal = MoveBaseGoal()
@@ -104,6 +88,8 @@ def send(goals):
 			rospy.loginfo("[main] CANCELED THE FUCKING GOALS")
 			goals = []
 			return
+		if preset:
+			continue
 		for i in range(len(rots)):
 			tmp = quaternion_from_euler(rots[i][0], rots[i][1], rots[i][2])
 			# print tmp
@@ -119,10 +105,6 @@ def send(goals):
 				rospy.loginfo("[rot] CANCELED THE FUCKING GOALS")
 				goals = []
 				return
-
-	# if not canceled:
-		# reached.publish("true")
-	# canceled = False
 	setGoal = False
 
 #localize by current position of rooomba
@@ -131,17 +113,6 @@ def localizeRoomba(poseWithCov): # get data from /amcl_pose
 	nearest_node = graph.localize(poseWithCov.pose.pose)
 	currentLocation = nearest_node[0]
 	#print "location = ", nearest_node[0], nearest_node[1]
-	
-	# this need to be reset somewhere else
-	if not setGoal and False: # dead code at the moment, just to test
-		rospy.loginfo("GENERATING NEW PATH!!!")
-		pose = graph.nodes[4].goal.target_pose.pose
-	 	p2 = graph.localize(pose)
-		
-	 	path = graph.Astar(nearest_node[0], p2[0])
-	 	# print path
-	 	send(path)
-	# # TODO: how to return the point? Concept.
 
 # search on street X
 def searchStreets(street):
@@ -153,66 +124,64 @@ def searchStreets(street):
 		#print streets
 		path = graph.Astar(currentLocation, streets[0][0])
 		path = path + [x[0].id for x in streets[1:]]
-		print path#, "canceled", canceled
+		rospy.loginfo("exploring with path = " + str(path))
 		send(path)
 	
 # go to a specific position (where a face is located)
 def gotoPose(pose):
-	global currentLocation, canceled
+	global currentLocation, canceled, preset
 	# canceled = False
 	print "going to a predefined position"
 	nearest_goal_position = graph.localize(pose)
 	goal_position = nearest_goal_position[0]
 	path = graph.Astar(currentLocation, goal_position)[1:]
-	print path#, "canceled", canceled
+	rospy.loginfo("going with path = " + str(path))
+	preset = True
 	send(path)
+	preset = False
 
 # recognized sign (oneway) is situated in pose
 # find the nearest node and remove the edge
 # only works if the nearest nodes are from the predefined global poses_to_remove
 def removeEdges(pose):
 	global poses_to_remove
+	print "removing edges!"
 	nearest_node = graph.localize(pose)
 	for edge in poses_to_remove:
 		if not nearest_node[1]:
 			el = poses_to_remove[edge]
 			if(nearest_node[0] == edge[0][0] or nearest_node[0] == edge[0][1]):
-				print graph.removeEdge(edge[0])
+				print "removed edges:", graph.removeEdge(edge[0])
 				edge[1] = True
+				print "removed:", edge
 def honk(msg):
 	pass
 
 def slow(msg):
 	global reconf
 	if msg.data == "true":
+		print "limit sign!"
 		reconf.update_configuration({"max_vel_x": 0.05})
 		reconf.update_configuration({"max_rot_vel": 0.5})
 		time = rospy.get_time() + rospy.Duration(5.0).to_sec()
 		while(time > rospy.get_time()):
 			pass
+		print "time to reset the limit sign!"
 		reconf.update_configuration({"max_vel_x": 0.4})
 		reconf.update_configuration({"max_rot_vel": 1.5})
-		# reconf.update_configuration({"acc_lim_v": 0.35})
-		#rospy.Timer(rospy.Duration(10), resetSpeed)
 
 def stop(msg):
 	global reconf
 	if msg.data == "true":
-		reconf.update_configuration({"max_vel_x": 0.1})
+		print "stop sign!!"
+		reconf.update_configuration({"max_vel_x": 0.0})
 		reconf.update_configuration({"max_rot_vel": 0.0})
 		time = rospy.get_time() + rospy.Duration(2.0).to_sec()
 		while(time > rospy.get_time()):
 			pass
+		print "time to reset stop sign!!"
 		reconf.update_configuration({"max_vel_x": 0.4})
 		reconf.update_configuration({"max_rot_vel": 1.5})
-		#rospy.Timer(rospy.Duration(10), resetSpeed)
-
-def resetSpeed(arg):
-	global reconf
-	reconf.update_configuration({"max_vel_x": 0.4})
-	reconf.update_configuration({"max_rot_vel": 1.5})
-	# reconf.update_configuration({"acc_lim_v": 0.75})
-	#return True
 
 if __name__ == '__main__':
 	try:
@@ -360,40 +329,6 @@ if __name__ == '__main__':
 				rospy.Subscriber("/sign/honk", String, honk)
 				rospy.Subscriber("/sign/oneway", Pose, removeEdges)
 				#sendAllGoals() # just to explore the map
-			
 				rospy.spin()
-
 	except rospy.ROSInterruptException:
 		pass
-
-# list of dots on the map:
-# red street:
-#   x    y
-# 8.32, -2.2
-# 7.61, -2.29
-# 7.47, -1.41
-#
-# yellow street:
-#  x     y
-# 7.15, -0.07
-# 7.05, 0.70
-# 6.99, 1.5
-#
-# blue street:
-#   x    y
-# 6.15, 1.36
-# 5.17, 1.18
-# 4.13, 0.99
-# 3.04, 0.99
-# 2.10, 0.97
-#
-# green street:
-#   x    y
-# 2.19, 0.26
-# 2.11, -0.63
-# 3.09, -0.59
-# 4.10, -0.43
-# 4.04, 0.32
-# 5.34, -0.17
-# 6.22, -0.11
-
