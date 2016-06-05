@@ -53,7 +53,7 @@ def sendAllGoals():
 
 # cancel all goals if message is true
 def cancel(msg):
-	global setGoal, globGoals, canceled
+	global setGoal, globGoals#, canceled
 	print "canceling a goal: ", msg
 	print "before canceling", globGoals
 	if(msg.data == "true"):
@@ -61,7 +61,7 @@ def cancel(msg):
 		alib.cancel_goal()
 		setGoal = False
 		globGoals = []
-		canceled = True
+		#canceled = True
 	print "after canceling", globGoals
 
 # just a wrapper:
@@ -79,9 +79,10 @@ def send(goals):
 	# print "entered send(goals)"
 	setGoal = True
 	state = -1
-	rots = [(0, 0, 90 * 3.1415/180), (0, 0, 90 * 3.1415/180), (0, 0, 180 * 3.1415/180), (0, 0, 270 * 3.1415/180), (0, 0, 0)]
+	rots = [(0, 0, 90 * 3.1415/180), (0, 0, 90 * 3.1415/180), (0, 0, 180 * 3.1415/180), (0, 0, 270 * 3.1415/180)]
+	print goals
 	for nodeID in goals:
-		print "canceled?", canceled
+		#print "canceled?", canceled
 		# if canceled:
 			# break
 		node = graph.getNodeByID(nodeID)
@@ -95,11 +96,13 @@ def send(goals):
 		result = alib.wait_for_result(rospy.Duration(90.0))
 		state = alib.get_state()
 		print "result = ", result, ", state = ", state
-		if result and (state == GoalStatus.PREEMPTED or state == GoalStatus.PREEMPTING or state == GoalStatus.RECALLING):
-			return
+		if state != GoalStatus.SUCCEEDED:#(state == GoalStatus.PREEMPTED or state == GoalStatus.PREEMPTING or state == GoalStatus.RECALLING or state == GoalStatus.PENDING):
+			rospy.loginfo("CANCELED THE FUCKING GOALS")
+			goals = []
+			break
 		for i in range(len(rots)):
 			tmp = quaternion_from_euler(rots[i][0], rots[i][1], rots[i][2])
-			print tmp
+			# print tmp
 			goal.target_pose.pose.orientation.x = tmp[0]
 			goal.target_pose.pose.orientation.y = tmp[1]
 			goal.target_pose.pose.orientation.z = tmp[2]
@@ -108,13 +111,15 @@ def send(goals):
 			result = alib.wait_for_result(rospy.Duration(90.0))
 			state = alib.get_state()
 			print "rotation: result = ", result, ", state = ", state
-			if result and (state == GoalStatus.PREEMPTED or state == GoalStatus.PREEMPTING or state == GoalStatus.RECALLING):
-				return
+			if state != GoalStatus.SUCCEEDED:# and (state == GoalStatus.PREEMPTED or state == GoalStatus.PREEMPTING or state == GoalStatus.RECALLING or state == GoalStatus.PENDING):
+				rospy.loginfo("CANCELED THE FUCKING GOALS")
+				goals = []
+				break
 
 	# if not canceled:
 		# reached.publish("true")
 	# canceled = False
-	setGoal = False
+	# setGoal = False
 
 #localize by current position of rooomba
 def localizeRoomba(poseWithCov): # get data from /amcl_pose
@@ -163,12 +168,12 @@ def gotoPose(pose):
 # only works if the nearest nodes are from the predefined global poses_to_remove
 def removeEdges(pose):
 	global poses_to_remove
-	nearest_node = graph.localize(poseWithCov.pose.pose)
+	nearest_node = graph.localize(pose)
 	for edge in poses_to_remove:
 		if not nearest_node[1]:
 			el = poses_to_remove[edge]
 			if(nearest_node[0] == edge[0][0] or nearest_node[0] == edge[0][1]):
-				graph.removeEdge(edge[0])
+				print graph.removeEdge(edge[0])
 				edge[1] = True
 def honk(msg):
 	pass
@@ -179,20 +184,21 @@ def slow(msg):
 		reconf.update_configuration({"max_vel_x": 0.05})
 		reconf.update_configuration({"max_rot_vel": 0.5})
 		# reconf.update_configuration({"acc_lim_v": 0.35})
-		rospy.Timer(rospy.Duration(10), resetSpeed)
+		#rospy.Timer(rospy.Duration(10), resetSpeed)
 
 def stop(msg):
 	global reconf
 	if msg.data == "true":
 		reconf.update_configuration({"speed_lim_v": 0.0})
 		reconf.update_configuration({"max_rot_vel": 0.0})
-		rospy.Timer(rospy.Duration(10), resetSpeed)
+		#rospy.Timer(rospy.Duration(10), resetSpeed)
 
-def resetSpeed():
+def resetSpeed(arg):
 	global reconf
 	reconf.update_configuration({"max_vel_x": 0.4})
 	reconf.update_configuration({"max_rot_vel": 1.5})
 	# reconf.update_configuration({"acc_lim_v": 0.75})
+	#return True
 
 if __name__ == '__main__':
 	try:
@@ -299,8 +305,8 @@ if __name__ == '__main__':
 			]
 			graph = Graph(goals, edges, colors)
 			# graph.printGraph()
-			print "removed = ", graph.removeEdge((14,16))
-			print "removed = ", graph.removeEdge((3, 4))
+			#print "removed = ", graph.removeEdge((14,16))
+			#print "removed = ", graph.removeEdge((3, 4))
 			# graph.printGraph()
 			# print rospy.get_name()
 			# pose = graph.nodes[0].goal.target_pose.pose
@@ -322,7 +328,7 @@ if __name__ == '__main__':
 				# init the actionlib server to send goals (works only locally)
 				alib = actionlib.SimpleActionClient("move_base", MoveBaseAction)
 				reconf = dynamic_reconfigure.client.Client("/move_base/DWAPlannerROS")
-				reached = rospy.Publisher("/goal_reached", String)
+				reached = rospy.Publisher("/goal_reached", String, queue_size=100)
 				reconf.update_configuration({"max_vel_x": 0.4})
 				reconf.update_configuration({"max_rot_vel": 1.5})
 				reconf.update_configuration({"xy_goal_tolerance": 0.25})
