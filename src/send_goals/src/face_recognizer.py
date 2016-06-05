@@ -3,6 +3,8 @@
 import nltk
 from nltk.metrics import edit_distance
 import rospy
+import actionlib
+from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal, MoveBaseActionGoal
 from std_msgs.msg import String, ColorRGBA
 from geometry_msgs.msg import *
 from visualization_msgs.msg import Marker, MarkerArray
@@ -23,6 +25,7 @@ det = {}
 search_name = None
 sent_street = 0
 colour_street = None
+alib = None
 
 #faces
 detected = 0
@@ -97,7 +100,7 @@ def speak_robot(str_speech):
 
 
 def recognized_face(data):
-    global markers_pub, detect_true, sound_sent, color, det_entry, faces_count, face_marker, search_name, status, cancel_pub, voice_pub
+    global markers_pub, detect_true, sound_sent, color, det_entry, faces_count, face_marker, search_name, status, cancel_pub, voice_pub, alib
 
     name = data.data
     #print name
@@ -105,6 +108,7 @@ def recognized_face(data):
     #when we have the position, but looking for the rotation
     if status == 2 and search_name == name:
         #cancel_pub.publish("true")
+        #alib.cancel_goal()
         speak_robot(search_name + ", where would you like to go?")
         status = 3
     
@@ -308,7 +312,7 @@ def voice_action(data):
         face_reached = 0
 
 def publish_faces(non):
-    global det, markers_pub, search_name, goto_pub, cancel_pub, status, colour_street, sent_street, street_pub
+    global det, markers_pub, search_name, goto_pub, cancel_pub, status, colour_street, sent_street, street_pub, alib
     
     markers = []
     marker = Marker()
@@ -326,7 +330,8 @@ def publish_faces(non):
             if name == search_name:
                 print "Name we are looking for is the same as the name in our dict. Sending directions."
                 send_pose = marker.pose
-                cancel_pub.publish("true")
+                #cancel_pub.publish("true")
+                alib.cancel_goal()
                 print "cancelling in loop"
                 #rospy.
                 goto_pub.publish(send_pose)
@@ -344,7 +349,8 @@ def publish_faces(non):
     
     if sent_street == 0 and colour_street != None and status == 0:
         print "sending goal!"
-        cancel_pub.publish("true")
+        #cancel_pub.publish("true")
+        alib.cancel_goal()
         print "canceling previous goal!"
         street_pub.publish(colour_street)
         sent_street = 1
@@ -358,8 +364,9 @@ def goal_reached(data):
 
 
 def face_recognizer():
-    global markers_pub, voice_pub, cancel_pub, street_pub, goto_pub, slow_pub, stop_pub, honk_pub, oneway_pub
+    global markers_pub, voice_pub, cancel_pub, street_pub, goto_pub, slow_pub, stop_pub, honk_pub, oneway_pub, alib
 
+    alib = actionlib.SimpleActionClient("move_base", MoveBaseAction)
     rospy.init_node('face_recognizer', anonymous=True)
     markers_pub = rospy.Publisher('/viz/markers', MarkerArray, queue_size=100)
     cancel_pub = rospy.Publisher('/cancel', String, queue_size=100)
