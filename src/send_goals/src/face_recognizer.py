@@ -348,6 +348,7 @@ def publish_faces(non):
         if search_name != None and status == 0:
             #print "We have a search name and status is 0."
             if name == search_name:
+                sent_street = 1     #we don't have to send street color, if we know where the face is
                 print "Name we are looking for is the same as the name in our dict. Sending directions. name we are looking for: ", search_name, "Name in our dict: ", name 
                 send_pose = marker.pose
                 goal = GoalID()
@@ -361,7 +362,7 @@ def publish_faces(non):
 	                
                 #goto_pub.publish(send_pose)
                 status = 1
-                sent_street = 1     #we don't have to send street color, if we know where the face is
+                
 
         if name in color_map:
             marker.color = color_map[name]
@@ -373,6 +374,7 @@ def publish_faces(non):
     markers_pub.publish(markers)
     
     if sent_street == 0 and colour_street != None and status == 0:
+        sent_street = 1
         print "sending goal!"
         goal = GoalID()
         cancel_pub.publish(goal)
@@ -385,7 +387,7 @@ def publish_faces(non):
         
         print "sending: "
         street_pub.publish(colour_street)
-        sent_street = 1
+        
 
 def goal_reached(data):
     global status
