@@ -15,6 +15,7 @@ from geometry_msgs.msg import *
 
 colorMap = {"red":0, "yellow":1, "blue":2, "green":3}
 goals = []
+globGoals = []
 graph = None
 alib = None
 currentLocation = None
@@ -49,14 +50,18 @@ def sendAllGoals():
 # cancel all goals if message is true
 def cancel(msg):
 	global setGoal
+	print "canceling a goal: ", msg
 	if(msg.data == "true"):
+		print "canceling for real!!!"
 		alib.cancel_goal()
 		setGoal = False
+		globGoals = []
 
 # just a wrapper:
 # send goals to the robot, given a list of node ids
 def send(goals):
-	global setGoal
+	global setGoal, globGoals
+	globGoals = goals
 	if setGoal:
 		rospy.loginfo("ALREADY SENDING SOME GOALS")
 		return
@@ -65,7 +70,7 @@ def send(goals):
 		return
 	# print "entered send(goals)"
 	setGoal = True
-	for nodeID in goals:
+	for nodeID in globGoals:
 		node = graph.getNodeByID(nodeID)
 		rospy.loginfo("Sending graph goal: " + str(nodeID))
 		goal = MoveBaseGoal()
@@ -116,10 +121,10 @@ def searchStreets(street):
 # go to a specific position (where a face is located)
 def gotoPose(pose):
 	global currentLocation
-	print "going to position", pose
+	print "going to a predefined position"
 	nearest_goal_position = graph.localize(pose)
-	goal_position = graph.getNodeByID(nearest_goal_position[0])
-	path = graph.Astar(currentLocation, goal_position)
+	goal_position = nearest_goal_position[0]
+	path = graph.Astar(currentLocation, goal_position)[1:]
 	print path
 	send(path)
 
