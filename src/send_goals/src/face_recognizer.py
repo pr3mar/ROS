@@ -15,6 +15,10 @@ voice_pub = None
 markers_pub = None
 cancel_pub = None
 goto_pub = None
+slow_pub = None 
+stop_pub = None
+honk_pub = None
+oneway_pub
 det = {}
 search_name = None
 
@@ -29,6 +33,7 @@ det_entry = None
 #signs
 det_signs = {}
 sign_detected = 0
+sign_detected_again = 0
 detect_sign_true = 0
 det_entry_sign = None
 signs_count = {}
@@ -114,7 +119,7 @@ def recognized_face(data):
     
 
 def detection_thresh(points):
-    global det, detected, detect_true, sound_sent, det_entry, faces_count
+    global det, detected, detect_true, sound_sent, det_entry, faces_count, detect_again
 
     for newPoint in points.markers:
         position = newPoint.pose.position
@@ -163,7 +168,7 @@ def detection_thresh(points):
 
 def sign_detection(points):
     #the same as for the face detection
-    global detect_sign_true, det_signs, sign_detected, det_entry_sign, signs_count, det
+    global detect_sign_true, det_signs, sign_detected, det_entry_sign, signs_count, det, sign_detected_again
 
     for newPoint in points.markers:
         position = newPoint.pose.position
@@ -184,7 +189,9 @@ def sign_detection(points):
                 if not det[key]['detected']:
                     min_point = det[key]
                 else:
+                    # we already have that point detected, lets count if it's really that point
                     min_point = "not"
+                    sign_detected_again += 1
 
         if min_point == None:
             detect_sign_true = 0     #when we detect new sign, we dont want recognizer to work immediately, but wait for this to become 1 (which means: sign detected!!)
@@ -225,7 +232,9 @@ def recognized_sign(data):
             if signs_count[name]['count'] > thresh:
                 det_entry_sign['name'] = name
                 print "adding name to the dictionary!: ", det_entry_sign['name'], det_entry_sign['point']
-                # find the closest node in graph
+                
+                # we publish to the appropriate topic
+                if name == 
         else:
             signs_count[name] = {'count': 1, 'face': False, 'name': name}
 
@@ -278,9 +287,11 @@ def publish_faces(non):
         name = det[key]['name']
         marker = det[key]['marker']
 
-        #lets check if we already have the face we are looking for
+        #lets check if we already have the face we are looking for (status = 0 means we are looking for a face)
         if search_name != None and status == 0:
+            print "We have a search name and status is 0."
             if name == search_name:
+                print "Name we are looking for is the same as the name in our dict. Sending directions."
                 send_pose = marker.pose
                 cancel_pub.publish("cancel")
                 goto_pub.publish(send_pose)
@@ -297,13 +308,17 @@ def publish_faces(non):
 
 
 def face_recognizer():
-    global markers_pub, voice_pub, cancel_pub, street_pub, goto_pub
+    global markers_pub, voice_pub, cancel_pub, street_pub, goto_pub, slow_pub, stop_pub, honk_pub, oneway_pub
 
     rospy.init_node('face_recognizer', anonymous=True)
-    markers_pub = rospy.Publisher('/viz/markers', MarkerArray)
+    markers_pub = rospy.Publisher('/viz/markers', MarkerArray, queue_size=100)
     cancel_pub = rospy.Publisher('/cancel', String, queue_size=100)
     street_pub = rospy.Publisher('/search/street', String, queue_size=100)
     goto_pub = rospy.Publisher('/goto', Pose, queue_size=100)
+    slow_pub = rospy.Publisher("/sign/slow", String, queue_size=100)
+    stop_pub = rospy.Publisher("/sign/stop", String, queue_size=100)
+    honk_pub = rospy.Publisher("/sign/honk", String, queue_size=100)
+    oneway_pub = rospy.Publisher("/sign/oneway", Pose, queue_size=100)
     voice_pub = rospy.Publisher('/robotsound', SoundRequest, queue_size=100)
     rospy.Subscriber('/transformedMarkers/faces', MarkerArray, detection_thresh)
     rospy.Subscriber('/transformedMarkers/signs', MarkerArray, sign_detection)
