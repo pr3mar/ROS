@@ -344,10 +344,10 @@ def publish_faces(non):
                 goal = GoalID()
                 cancel_pub.publish(goal)
                 #alib.cancel_goal()
-                print "canceling in loop"
+                print "canceling in loop, waiting"
                 time = rospy.get_time() + rospy.Duration(1.0).to_sec()
                 while(time > rospy.get_time()):
-			        print "time = ", time, "time now = ", rospy.get_time() 
+			        #print "time = ", time, "time now = ", rospy.get_time() 
 			        pass
 	                
                 goto_pub.publish(send_pose)
@@ -368,12 +368,12 @@ def publish_faces(non):
         goal = GoalID()
         cancel_pub.publish(goal)
         #alib.cancelGoal()
-        print "canceling previous goal!"
+        print "canceling previous goal! waiting:"
         time = rospy.get_time() + rospy.Duration(1.0).to_sec()
         while(time > rospy.get_time()):
-            print "time = ", time, "time now = ", rospy.get_time() 
+            #print "time = ", time, "time now = ", rospy.get_time() 
             pass
-	        
+	    print "sending: "
         street_pub.publish(colour_street)
         sent_street = 1
 

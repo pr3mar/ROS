@@ -79,7 +79,7 @@ def send(goals):
 	if(alib == None):
 		rospy.loginfo("WTF? Actionlib is None, send(goals)")
 		return
-	rospy.loginfo("sending " + str(goals))
+	rospy.loginfo("[new] sending " + str(goals))
 	# print "entered send(goals)"
 	setGoal = True
 	state = -1
@@ -147,7 +147,7 @@ def localizeRoomba(poseWithCov): # get data from /amcl_pose
 def searchStreets(street):
 	global currentLocation, colorMap, canceled
 	# canceled = False
-	print "going to explore a street"
+	print "going to explore street:", street.data, colorMap[street.data]
 	if street.data in colorMap:
 		streets = graph.getByColorSorted(currentLocation.goal.target_pose.pose, colorMap[street.data])
 		#print streets
