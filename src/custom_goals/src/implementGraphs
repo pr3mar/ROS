@@ -22,6 +22,7 @@ currentLocation = None
 setGoal = False
 poses_to_remove = {"3-4": [(3, 4), False], "14-16": [(14, 16), False]}
 reconf = None
+canceled = False
 
 # maybe not usefull at all, just for exploring
 def sendAllGoals():
@@ -49,7 +50,7 @@ def sendAllGoals():
 
 # cancel all goals if message is true
 def cancel(msg):
-	global setGoal, globGoals
+	global setGoal, globGoals, canceled
 	print "canceling a goal: ", msg
 	print "before canceling", globGoals
 	if(msg.data == "true"):
@@ -57,12 +58,13 @@ def cancel(msg):
 		alib.cancel_goal()
 		setGoal = False
 		globGoals = []
+		canceled = True
 	print "after canceling", globGoals
 
 # just a wrapper:
 # send goals to the robot, given a list of node ids
 def send(goals):
-	global setGoal, globGoals
+	global setGoal, globGoals, canceled
 	globGoals = goals
 	if setGoal:
 		rospy.loginfo("ALREADY SENDING SOME GOALS")
@@ -74,6 +76,9 @@ def send(goals):
 	# print "entered send(goals)"
 	setGoal = True
 	for nodeID in globGoals:
+		print "canceled?", canceled
+		if canceled:
+			break
 		node = graph.getNodeByID(nodeID)
 		rospy.loginfo("Sending graph goal: " + str(nodeID))
 		goal = MoveBaseGoal()
@@ -90,6 +95,7 @@ def send(goals):
 		#else:
 		#	rospy.loginfo("FAILED TO REACH GOAL!!!")
 		#	alib.cancel_goal()
+	canceled = False
 	setGoal = False
 
 #localize by current position of rooomba
