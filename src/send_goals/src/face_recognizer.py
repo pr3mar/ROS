@@ -381,7 +381,8 @@ def publish_faces(non):
         while(time > rospy.get_time()):
             #print "time = ", time, "time now = ", rospy.get_time() 
             pass
-	    print "sending: "
+        
+        print "sending: "
         street_pub.publish(colour_street)
         sent_street = 1
 
