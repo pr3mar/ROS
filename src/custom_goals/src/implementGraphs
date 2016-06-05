@@ -80,6 +80,7 @@ def send(goals):
 	setGoal = True
 	state = -1
 	rots = [(0, 0, 90 * 3.1415/180), (0, 0, 90 * 3.1415/180), (0, 0, 180 * 3.1415/180), (0, 0, 270 * 3.1415/180), (0, 0, 0)]
+	print goals
 	for nodeID in goals:
 		print "canceled?", canceled
 		# if canceled:
