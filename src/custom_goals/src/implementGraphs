@@ -7,11 +7,13 @@ import random
 import math
 from graph.graph import Graph
 from std_msgs.msg import String
+from tf.transformations import quaternion_from_euler
 
 # from sensor_msgs.msg import image_encodings # do I need this?
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal, MoveBaseActionGoal
 from actionlib_msgs.msg import GoalStatusArray
 from geometry_msgs.msg import *
+from actionlib_msgs.msg import GoalStatus
 
 colorMap = {"red":0, "yellow":1, "blue":2, "green":3}
 goals = []
@@ -90,11 +92,9 @@ def send(goals):
 		result = alib.wait_for_result(rospy.Duration(90.0))
 		state = alib.get_state()
 		print "result = ", result, ", state = ", state
-		#if result and state == GoalStatus.SUCCEEDED:
-		#	result = True
-		#else:
-		#	rospy.loginfo("FAILED TO REACH GOAL!!!")
-		#	alib.cancel_goal()
+		if result and (state == GoalStatus.PREEMPTED or state == GoalStatus.PREEMPTING or state == GoalStatus.RECALLING):
+			break
+
 	canceled = False
 	setGoal = False
 
