@@ -187,6 +187,11 @@ def slow(msg):
 	if msg.data == "true":
 		reconf.update_configuration({"max_vel_x": 0.05})
 		reconf.update_configuration({"max_rot_vel": 0.5})
+		time = rospy.get_time() + rospy.Duration(5.0).to_sec()
+		while(time > rospy.get_time()):
+			pass
+		reconf.update_configuration({"max_vel_x": 0.4})
+		reconf.update_configuration({"max_rot_vel": 1.5})
 		# reconf.update_configuration({"acc_lim_v": 0.35})
 		#rospy.Timer(rospy.Duration(10), resetSpeed)
 
@@ -195,6 +200,11 @@ def stop(msg):
 	if msg.data == "true":
 		reconf.update_configuration({"max_vel_x": 0.1})
 		reconf.update_configuration({"max_rot_vel": 0.0})
+		time = rospy.get_time() + rospy.Duration(2.0).to_sec()
+		while(time > rospy.get_time()):
+			pass
+		reconf.update_configuration({"max_vel_x": 0.4})
+		reconf.update_configuration({"max_rot_vel": 1.5})
 		#rospy.Timer(rospy.Duration(10), resetSpeed)
 
 def resetSpeed(arg):
