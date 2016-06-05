@@ -49,13 +49,15 @@ def sendAllGoals():
 
 # cancel all goals if message is true
 def cancel(msg):
-	global setGoal
+	global setGoal, globGoals
 	print "canceling a goal: ", msg
+	print "before canceling", globGoals
 	if(msg.data == "true"):
 		print "canceling for real!!!"
 		alib.cancel_goal()
 		setGoal = False
 		globGoals = []
+	print "after canceling", globGoals
 
 # just a wrapper:
 # send goals to the robot, given a list of node ids
@@ -68,6 +70,7 @@ def send(goals):
 	if(alib == None):
 		rospy.loginfo("WTF? Actionlib is None, send(goals)")
 		return
+	rospy.loginfo("sending " + str(globGoals))
 	# print "entered send(goals)"
 	setGoal = True
 	for nodeID in globGoals:
