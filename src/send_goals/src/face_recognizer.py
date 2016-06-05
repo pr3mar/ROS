@@ -38,6 +38,8 @@ max_face_name = None
 max_face_count = 0
 
 #signs
+max_sign_count = 0
+max_sign_name = None
 det_signs = {}
 sign_detected = 0
 sign_detected_again = 0
@@ -187,7 +189,7 @@ def detection_thresh(points):
 
 def sign_detection(points):
     #the same as for the face detection
-    global detect_sign_true, det_signs, sign_detected, det_entry_sign, signs_count, det, sign_detected_again, sign_detected_again_count, sign_pose
+    global detect_sign_true, det_signs, sign_detected, det_entry_sign, signs_count, det, sign_detected_again, sign_detected_again_count, sign_pose, max_sign_name, max_sign_count
 
     for newPoint in points.markers:
         position = newPoint.pose.position
@@ -223,6 +225,11 @@ def sign_detection(points):
 
 
         if min_point == None:
+            max_sign_name = None
+            max_sign_count = 0                  #reset max counter
+            for key1 in signs_count:            #reset to zero
+                    signs_count[key1]['count'] = 0
+
             detect_sign_true = 0     #when we detect new sign, we dont want recognizer to work immediately, but wait for this to become 1 (which means: sign detected!!)
             det[str(xp) + ";" + str(yp) + ";" + str(zp)] = {'count': 1, 'detected': False, 'name': None, 'marker': None, 'face': False, 'point': str(xp) + ";" + str(yp) + ";" + str(zp)}
         elif min_point != "not":
@@ -237,15 +244,13 @@ def sign_detection(points):
                 #so we detected a new sign - let's reset the counters and ask recognizer what he sees
                 detect_sign_true = 1     #we are indeed looking at the face - let's allow recognizer to start counting!
                 det_entry_sign = min_point       # global variable, will save name of the person to it once the point is recognized
-                for key1 in signs_count:            #reset to zero
-                    signs_count[key1]['count'] = 0
-
+                
         else:
             pass
 
 
 def recognized_sign(data):
-    global signs_count, detect_sign_true, det_entry_sign, sign_detected_again, honk_pub, stop_pub, slow_pub, oneway_pub, sign_pose
+    global signs_count, detect_sign_true, det_entry_sign, sign_detected_again, honk_pub, stop_pub, slow_pub, oneway_pub, sign_pose, max_sign_count, max_sign_name
 
     name = data.data
     #print name
@@ -253,30 +258,33 @@ def recognized_sign(data):
     thresh = 15
     thresh_reached = False
     
-    if detect_sign_true == 1 or sign_detected_again == 1:
-        if name in  signs_count:
-            signs_count[name]['count'] += 1
-            #print signs_count[name]['name']+": "+str(signs_count[name]['count'])
-            if signs_count[name]['count'] > thresh:
-                if detect_sign_true == 1 and det_entry_sign['name'] == None:
-                    detect_sign_true = 0
-                    det_entry_sign['name'] = name
-                    print "adding name to the dictionary!: ", det_entry_sign['name'], det_entry_sign['point']
-                
-                else:
-                    # we publish to the appropriate topic
-                    #print "we already have that sign, but we see it again!"
-                    if name == 'honk':
-                        honk_pub.publish("true")
-                    elif name=='stop':
-                        stop_pub.publish("true")
-                    elif name=='limit':   
-                        slow_pub.publish("true")  
-                    elif name=='oneway':  
-                        oneway_pub.publish(sign_pose)  
+    if name in  signs_count:
+        signs_count[name]['count'] += 1
+        #print signs_count[name]['name']+": "+str(signs_count[name]['count'])
+        if signs_count[name]['count'] > max_sign_count:
+            max_sign_count = signs_count[name]['count']
+            max_sign_name = name
 
-        else:
-            signs_count[name] = {'count': 1, 'face': False, 'name': name}
+        if max_sign_count > thresh:
+            if detect_sign_true == 1 and det_entry_sign['name'] == None:
+                detect_sign_true = 0
+                det_entry_sign['name'] = max_sign_name
+                print "adding name to the dictionary!: ", det_entry_sign['name'], det_entry_sign['point']
+            
+            elif sign_detected_again == 1:
+                # we publish to the appropriate topic
+                #print "we already have that sign, but we see it again!"
+                if max_sign_name == 'honk':
+                    honk_pub.publish("true")
+                elif max_sign_name =='stop':
+                    stop_pub.publish("true")
+                elif max_sign_name =='limit':   
+                    slow_pub.publish("true")  
+                elif max_sign_name =='oneway':  
+                    oneway_pub.publish(sign_pose)   #this is probably wrong -> not necessarily the same frame?
+
+    else:
+        signs_count[name] = {'count': 1, 'face': False, 'name': name}
 
     
 def voice_action(data):
