@@ -9,7 +9,7 @@ from visualization_msgs.msg import Marker, MarkerArray
 from sound_play.msg import SoundRequest
 import tf
 
-status = 0      # 0 = looking for the face, 1 = approaching the face, 2 = waiting for command
+status = 0      # 0 = looking for the face, 1 = approaching the face, 2 = waiting for command from the face
 
 voice_pub = None
 markers_pub = None
@@ -298,10 +298,13 @@ def voice_action(data):
     #speak_robot("Where would you like to go, " + name)
     #street_pub.publish(colour_street)
     
-    #we reset everything because we received a new goal
+    #if status != 2 (2 = waiting for command) we reset everything because we received a new goal
     #cancel_pub.publish("true")
-    sent_street = 0
-    status = 0
+    if status < 2:
+        print status
+    else:
+        sent_street = 0
+        status = 0
 
 def publish_faces(non):
     global det, markers_pub, search_name, goto_pub, cancel_pub, status, colour_street, sent_street, street_pub
@@ -323,6 +326,7 @@ def publish_faces(non):
                 print "Name we are looking for is the same as the name in our dict. Sending directions."
                 send_pose = marker.pose
                 cancel_pub.publish("true")
+                print "cancelling in loop"
                 #rospy.
                 goto_pub.publish(send_pose)
                 status = 1
@@ -340,6 +344,7 @@ def publish_faces(non):
     if sent_street == 0 and colour_street != None and status == 0:
         print "sending goal!"
         cancel_pub.publish("true")
+        print "canceling previous goal!"
         street_pub.publish(colour_street)
         sent_street = 1
 
