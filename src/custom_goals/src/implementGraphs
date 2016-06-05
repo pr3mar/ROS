@@ -98,9 +98,12 @@ def send(goals):
 		if result and (state == GoalStatus.PREEMPTED or state == GoalStatus.PREEMPTING or state == GoalStatus.RECALLING):
 			return
 		for i in range(len(rots)):
-			tmp = quaternion_from_euler(rots[1][0], rots[1][1], rots[1][2])
+			tmp = quaternion_from_euler(rots[i][0], rots[i][1], rots[i][2])
 			print tmp
-			# goal.target_pose.pose.orientation = tmp
+			goal.target_pose.pose.orientation.x = tmp[0]
+			goal.target_pose.pose.orientation.y = tmp[1]
+			goal.target_pose.pose.orientation.z = tmp[2]
+			goal.target_pose.pose.orientation.w = tmp[3]
 			alib.send_goal(goal)
 			result = alib.wait_for_result(rospy.Duration(90.0))
 			state = alib.get_state()
@@ -320,8 +323,8 @@ if __name__ == '__main__':
 				alib = actionlib.SimpleActionClient("move_base", MoveBaseAction)
 				reconf = dynamic_reconfigure.client.Client("/move_base/DWAPlannerROS")
 				reached = rospy.Publisher("/goal_reached", String)
-				reconf.update_configuration({"max_vel_x": 0.4})
-				reconf.update_configuration({"max_rot_vel": 5.0})
+				reconf.update_configuration({"max_vel_x": 0.1})
+				reconf.update_configuration({"max_rot_vel": 2.5})
 				# reconf.update_configuration({"acc_lim_v": 0.75})
 				rospy.loginfo("Waiting for actionlib server")
 				alib.wait_for_server(rospy.Duration(5.0))
