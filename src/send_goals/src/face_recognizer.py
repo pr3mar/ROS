@@ -9,7 +9,7 @@ from visualization_msgs.msg import Marker, MarkerArray
 from sound_play.msg import SoundRequest
 import tf
 
-status = 0      # 0 = looking for the face, 1 = approaching the face, 2 = waiting for command from the face
+status = 0      # 0 = looking for the face, 1 = approaching the face, 2 = approached the face, 3 = waiting for the command from the face
 
 voice_pub = None
 markers_pub = None
@@ -102,11 +102,11 @@ def recognized_face(data):
     name = data.data
     #print name
 
-    #when we have the position, but looking for the rotation (TO-DO: wait for the detection first)
-    if status == 1 and search_name == name:
+    #when we have the position, but looking for the rotation
+    if status == 2 and search_name == name:
         #cancel_pub.publish("true")
         speak_robot(search_name + ", where would you like to go?")
-        status = 2
+        status = 3
     
     thresh = 15
     thresh_reached = False
@@ -305,6 +305,7 @@ def voice_action(data):
     else:
         sent_street = 0
         status = 0
+        face_reached = 0
 
 def publish_faces(non):
     global det, markers_pub, search_name, goto_pub, cancel_pub, status, colour_street, sent_street, street_pub
@@ -348,6 +349,13 @@ def publish_faces(non):
         street_pub.publish(colour_street)
         sent_street = 1
 
+def goal_reached(data):
+    global status
+
+    #when we have the position, but looking for the rotation (TO-DO: wait for the detection first)
+    if data.data == 'true' and status == 1:
+        status = 2
+
 
 def face_recognizer():
     global markers_pub, voice_pub, cancel_pub, street_pub, goto_pub, slow_pub, stop_pub, honk_pub, oneway_pub
@@ -357,17 +365,18 @@ def face_recognizer():
     cancel_pub = rospy.Publisher('/cancel', String, queue_size=100)
     street_pub = rospy.Publisher('/search/street', String, queue_size=100)
     goto_pub = rospy.Publisher('/goto', Pose, queue_size=100)
-    slow_pub = rospy.Publisher("/sign/slow", String, queue_size=100)
-    stop_pub = rospy.Publisher("/sign/stop", String, queue_size=100)
-    honk_pub = rospy.Publisher("/sign/honk", String, queue_size=100)
-    oneway_pub = rospy.Publisher("/sign/oneway", Pose, queue_size=100)
+    slow_pub = rospy.Publisher('/sign/slow', String, queue_size=100)
+    stop_pub = rospy.Publisher('/sign/stop', String, queue_size=100)
+    honk_pub = rospy.Publisher('/sign/honk', String, queue_size=100)
+    oneway_pub = rospy.Publisher('/sign/oneway', Pose, queue_size=100)
     voice_pub = rospy.Publisher('/robotsound', SoundRequest, queue_size=100)
     rospy.Subscriber('/transformedMarkers/faces', MarkerArray, detection_thresh)
     rospy.Subscriber('/transformedMarkers/signs', MarkerArray, sign_detection)
     rospy.Subscriber('/recognizer/signs', String, recognized_sign)
     rospy.Subscriber('/recognizer/face', String, recognized_face)
     rospy.Subscriber('/tf', tf.msg.tfMessage, publish_faces)
-    rospy.Subscriber("/command", String, voice_action)
+    rospy.Subscriber('/command', String, voice_action)
+    rospy.Subscriber('/goal_reached', String, goal_reached)
     rospy.spin()
 
 if __name__ == '__main__':
