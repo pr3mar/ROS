@@ -290,6 +290,7 @@ def recognized_sign(data):
 def voice_action(data):
     global search_name, colour_street, street_pub, sent_street, status, cancel_pub
 
+    status = -1
     #print "You said: "+data.data
 
     #now do sth with that data!
@@ -347,7 +348,7 @@ def publish_faces(non):
         if search_name != None and status == 0:
             #print "We have a search name and status is 0."
             if name == search_name:
-                print "Name we are looking for is the same as the name in our dict. Sending directions."
+                print "Name we are looking for is the same as the name in our dict. Sending directions. name we are looking for: ", search_name, "Name in our dict: ", name 
                 send_pose = marker.pose
                 goal = GoalID()
                 cancel_pub.publish(goal)
@@ -358,7 +359,7 @@ def publish_faces(non):
 			        #print "time = ", time, "time now = ", rospy.get_time() 
 			        pass
 	                
-                goto_pub.publish(send_pose)
+                #goto_pub.publish(send_pose)
                 status = 1
                 sent_street = 1     #we don't have to send street color, if we know where the face is
 
