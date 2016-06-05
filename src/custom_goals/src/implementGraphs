@@ -98,7 +98,9 @@ def send(goals):
 		if result and (state == GoalStatus.PREEMPTED or state == GoalStatus.PREEMPTING or state == GoalStatus.RECALLING):
 			return
 		for i in range(len(rots)):
-			goal.target_pose.pose.orientation = quaternion_from_euler(rots[1][0], rots[1][1], rots[1][2])
+			tmp = quaternion_from_euler(rots[1][0], rots[1][1], rots[1][2])
+			print tmp
+			# goal.target_pose.pose.orientation = tmp
 			alib.send_goal(goal)
 			result = alib.wait_for_result(rospy.Duration(90.0))
 			state = alib.get_state()
