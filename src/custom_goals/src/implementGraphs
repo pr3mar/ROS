@@ -68,7 +68,7 @@ def cancel(msg):
 # send goals to the robot, given a list of node ids
 def send(goals):
 	global setGoal, globGoals, canceled, reached
-	globGoals = goals
+	# globGoals = goals
 	if setGoal:
 		rospy.loginfo("ALREADY SENDING SOME GOALS")
 		return
@@ -79,10 +79,10 @@ def send(goals):
 	# print "entered send(goals)"
 	setGoal = True
 	state = -1
-	for nodeID in globGoals:
+	for nodeID in goals:
 		print "canceled?", canceled
-		if canceled:
-			break
+		# if canceled:
+			# break
 		node = graph.getNodeByID(nodeID)
 		rospy.loginfo("Sending graph goal: " + str(nodeID))
 		goal = MoveBaseGoal()
@@ -96,9 +96,9 @@ def send(goals):
 		print "result = ", result, ", state = ", state
 		if result and (state == GoalStatus.PREEMPTED or state == GoalStatus.PREEMPTING or state == GoalStatus.RECALLING):
 			return
-	if not canceled:
-		reached.publish("true")
-	canceled = False
+	# if not canceled:
+		# reached.publish("true")
+	# canceled = False
 	setGoal = False
 
 #localize by current position of rooomba
@@ -122,25 +122,25 @@ def localizeRoomba(poseWithCov): # get data from /amcl_pose
 # search on street X
 def searchStreets(street):
 	global currentLocation, colorMap, canceled
-	canceled = False
+	# canceled = False
 	print "going to explore a street"
 	if street.data in colorMap:
 		streets = graph.getByColorSorted(currentLocation.goal.target_pose.pose, colorMap[street.data])
 		#print streets
 		path = graph.Astar(currentLocation, streets[0][0])
 		path = path + [x[0].id for x in streets[1:]]
-		print path, "canceled", canceled
+		print path#, "canceled", canceled
 		send(path)
 	
 # go to a specific position (where a face is located)
 def gotoPose(pose):
 	global currentLocation, canceled
-	canceled = False
+	# canceled = False
 	print "going to a predefined position"
 	nearest_goal_position = graph.localize(pose)
 	goal_position = nearest_goal_position[0]
 	path = graph.Astar(currentLocation, goal_position)[1:]
-	print path, "canceled", canceled
+	print path#, "canceled", canceled
 	send(path)
 
 # recognized sign (oneway) is situated in pose
@@ -306,7 +306,7 @@ if __name__ == '__main__':
 				rospy.init_node('graph_send_goals')
 				# init the actionlib server to send goals (works only locally)
 				alib = actionlib.SimpleActionClient("move_base", MoveBaseAction)
-				reconf = dynamic_reconfigure.client.Client("navigation_velocity_smoother")
+				reconf = dynamic_reconfigure.client.Client("/navigation_velocity_smoother")
 				reached = rospy.Publisher("/goal_reached", String)
 				reconf.update_configuration({"speed_lim_v": 0.4})
 				reconf.update_configuration({"speed_lim_w": 2.7})
