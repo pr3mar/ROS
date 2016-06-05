@@ -21,6 +21,8 @@ honk_pub = None
 oneway_pub = None
 det = {}
 search_name = None
+sent_street = 0
+colour_street = None
 
 #faces
 detected = 0
@@ -103,6 +105,7 @@ def recognized_face(data):
     #when we have the position, but looking for the rotation (TO-DO: wait for the detection first)
     if status == 1 and search_name == name:
         cancel_pub.publish("true")
+        status = 2
     
     thresh = 15
     thresh_reached = False
@@ -130,7 +133,7 @@ def detection_thresh(points):
         mind = 0.5
         min_point = None
         if zp > 1:
-            print xp, yp, zp
+            print "false face: ", xp, yp, zp
             continue
         for key in det:
             (x, y, z) = key.split(';')
@@ -179,7 +182,7 @@ def sign_detection(points):
         mind = 0.5
         min_point = None
         if zp > 1:
-            print xp, yp, zp
+            print "false sign: ", xp, yp, zp
             continue
         for key in det:
             (x, y, z) = key.split(';')
@@ -225,7 +228,7 @@ def sign_detection(points):
             pass
 
 def recognized_sign(data):
-    global signs_count, detect_sign_true, det_entry_sign, sign_detected_again, honk_pub
+    global signs_count, detect_sign_true, det_entry_sign, sign_detected_again, honk_pub, stop_pub, slow_pub, oneway_pub
 
     name = data.data
     #print name
@@ -245,16 +248,22 @@ def recognized_sign(data):
                 
                 else:
                     # we publish to the appropriate topic
-                    print "we already have that sign, but we see it again!"
+                    #print "we already have that sign, but we see it again!"
                     if name == 'honk':
                         honk_pub.publish("true")
-                
+                    elif name=='stop':
+                        stop_pub.publish("true")
+                    elif name=='limit':   
+                        slow_pub.publish("true")  
+                    elif name=='oneway':   
+                        oneway_pub.publish("true")  
+
         else:
             signs_count[name] = {'count': 1, 'face': False, 'name': name}
 
     
 def voice_action(data):
-    global search_name
+    global search_name, colour_street, street_pub, sent_street, status, cancel_pub
 
     #print "You said: "+data.data
 
@@ -285,11 +294,15 @@ def voice_action(data):
 
     print "Mission Impossible: %s %s %s %s %s"%(name,  colour_building, building[0], colour_street, street[0])
     #speak_robot("Where would you like to go, " + name)
-    street_pub.publish(colour_street)
-
+    #street_pub.publish(colour_street)
+    
+    #we reset everything because we received a new goal
+    cancel_pub.publish("true")
+    sent_street = 0
+    status = 0
 
 def publish_faces(non):
-    global det, markers_pub, search_name, goto_pub, cancel_pub, status
+    global det, markers_pub, search_name, goto_pub, cancel_pub, status, colour_street, sent_street, street_pub
     
     markers = []
     marker = Marker()
@@ -303,13 +316,14 @@ def publish_faces(non):
 
         #lets check if we already have the face we are looking for (status = 0 means we are looking for a face)
         if search_name != None and status == 0:
-            print "We have a search name and status is 0."
+            #print "We have a search name and status is 0."
             if name == search_name:
                 print "Name we are looking for is the same as the name in our dict. Sending directions."
                 send_pose = marker.pose
                 cancel_pub.publish("true")
                 goto_pub.publish(send_pose)
                 status = 1
+                sent_street = 1     #we don't have to send street color, if we know where the face is
 
         if name in color_map:
             marker.color = color_map[name]
@@ -319,6 +333,11 @@ def publish_faces(non):
         markers.append(marker)
         
     markers_pub.publish(markers)
+    
+    if sent_street == 0 and colour_street != None:
+        print "sending goal!"
+        street_pub.publish(colour_street)
+        sent_street = 1
 
 
 def face_recognizer():
