@@ -331,7 +331,8 @@ def publish_faces(non):
             if name == search_name:
                 print "Name we are looking for is the same as the name in our dict. Sending directions."
                 send_pose = marker.pose
-                cancel_pub.publish({})
+                goal = GoalID()
+                cancel_pub.publish(goal)
                 #alib.cancel_goal()
                 print "cancelling in loop"
                 #rospy.
@@ -350,7 +351,8 @@ def publish_faces(non):
     
     if sent_street == 0 and colour_street != None and status == 0:
         print "sending goal!"
-        cancel_pub.publish({})
+        goal = GoalID()
+        cancel_pub.publish(goal)
         #alib.cancelGoal()
         print "canceling previous goal!"
         street_pub.publish(colour_street)
