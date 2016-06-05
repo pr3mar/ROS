@@ -311,7 +311,7 @@ def publish_faces(non):
 
         #lets check if we already have the face we are looking for (status = 0 means we are looking for a face)
         if search_name != None and status == 0:
-            print "We have a search name and status is 0."
+            #print "We have a search name and status is 0."
             if name == search_name:
                 print "Name we are looking for is the same as the name in our dict. Sending directions."
                 send_pose = marker.pose
