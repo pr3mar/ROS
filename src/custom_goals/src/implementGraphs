@@ -283,7 +283,7 @@ if __name__ == '__main__':
 				# init the actionlib server to send goals (works only locally)
 				alib = actionlib.SimpleActionClient("move_base", MoveBaseAction)
 				reconf = dynamic_reconfigure.client.Client("navigation_velocity_smoother")
-				reconf.update_configuration({"speed_lim_v": 0.7})
+				reconf.update_configuration({"speed_lim_v": 0.4})
 				rospy.loginfo("Waiting for actionlib server")
 				alib.wait_for_server(rospy.Duration(5.0))
 				rospy.loginfo("Actionlib server started.")
@@ -294,7 +294,7 @@ if __name__ == '__main__':
 				rospy.Subscriber("/sign/slow", String, slow)
 				rospy.Subscriber("/sign/stop", String, stop)
 				rospy.Subscriber("/sign/honk", String, honk)
-				# rospy.Subscriber("sign_recognition", PoseStamped, removeEdges) # TODO: really need to discuss this this!!!
+				rospy.Subscriber("/sign/oneway", Pose, removeEdges)
 				# # sendAllGoals() # just to explore the map
 			
 				rospy.spin()
