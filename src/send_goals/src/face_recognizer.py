@@ -112,7 +112,7 @@ def recognized_face(data):
 
     #when we have the position, but looking for the rotation
     if status == 2 and search_name == name:
-        goal  = GoalID()
+        goal = GoalID()
         #cancel_pub.publish(goal)
         #alib.cancel_goal()
         speak_robot(search_name + ", where would you like to go?")
@@ -288,9 +288,9 @@ def recognized_sign(data):
 
     
 def voice_action(data):
-    global search_name, colour_street, street_pub, sent_street, status, cancel_pub
+    global search_name, colour_street, street_pub, sent_street, status, cancel_pub, det
 
-    status = -1
+    #status = -1
     #print "You said: "+data.data
 
     #now do sth with that data!
@@ -321,15 +321,41 @@ def voice_action(data):
     print "Mission Impossible: %s %s %s %s %s"%(name,  colour_building, building[0], colour_street, street[0])
     #speak_robot("Where would you like to go, " + name)
     #street_pub.publish(colour_street)
-    
-    #if status != 2 (2 = waiting for command) we reset everything because we received a new goal
-    #cancel_pub.publish("true")
+    just_sent = 0
+
     if status > 2:
-        print "status > 2: not resetting!"
+        print "status > 2: This is command from person."
+    
     else:
-        sent_street = 0
-        status = 0
-        face_reached = 0
+        for key in det:
+            if det[key]['name'] == None:
+                continue
+
+            name = det[key]['name']
+
+            #lets check if we already have the face we are looking for (status = 0 means we are looking for a face)
+            if search_name != None:
+                #print "We have a search name and status is 0."
+                if name == search_name:
+                    sent_street = 1     #we don't have to send street color, if we know where the face is
+                    status = 1
+                    just_sent = 1
+                    print "Name we are looking for is the same as the name in our dict. Sending directions. name we are looking for: ", search_name, "Name in our dict: ", name 
+                    send_pose = marker.pose
+                    goal = GoalID()
+                    cancel_pub.publish(goal)
+                    #alib.cancel_goal()
+                    print "canceling in loop, waiting"
+                    time = rospy.get_time() + rospy.Duration(1.0).to_sec()
+                    while(time > rospy.get_time()):
+                        #print "time = ", time, "time now = ", rospy.get_time() 
+                        pass
+                        
+                    goto_pub.publish(send_pose)     #sending coordinates of the person
+    
+        if just_sent = 0:
+            sent_street = 0
+            status = 0
 
 def publish_faces(non):
     global det, markers_pub, search_name, goto_pub, cancel_pub, status, colour_street, sent_street, street_pub, alib
@@ -343,12 +369,22 @@ def publish_faces(non):
 
         name = det[key]['name']
         marker = det[key]['marker']
+        print "coloring marker: ", name, color_map[name]
+        if name in color_map:
+            print "custom color"
+            marker.color = color_map[name]
+        else:
+            print "default color"
+            marker.color = ColorRGBA(0, 0, 0, 1)
+
+        markers.append(marker)
 
         #lets check if we already have the face we are looking for (status = 0 means we are looking for a face)
         if search_name != None and status == 0:
             #print "We have a search name and status is 0."
             if name == search_name:
                 sent_street = 1     #we don't have to send street color, if we know where the face is
+                status = 1
                 print "Name we are looking for is the same as the name in our dict. Sending directions. name we are looking for: ", search_name, "Name in our dict: ", name 
                 send_pose = marker.pose
                 goal = GoalID()
@@ -361,15 +397,10 @@ def publish_faces(non):
 			        pass
 	                
                 #goto_pub.publish(send_pose)
-                status = 1
+                
                 
 
-        if name in color_map:
-            marker.color = color_map[name]
-        else:
-            marker.color = ColorRGBA(0, 0, 0, 1)
-
-        markers.append(marker)
+        
         
     markers_pub.publish(markers)
     
