@@ -22,6 +22,7 @@ oneway_pub = None
 det = {}
 search_name = None
 sent_street = 0
+colour_street = None
 
 #faces
 detected = 0
