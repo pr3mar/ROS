@@ -25,6 +25,7 @@ setGoal = False
 poses_to_remove = {"3-4": [(3, 4), False], "14-16": [(14, 16), False]}
 reconf = None
 canceled = False
+reached = None
 
 # maybe not usefull at all, just for exploring
 def sendAllGoals():
@@ -66,7 +67,7 @@ def cancel(msg):
 # just a wrapper:
 # send goals to the robot, given a list of node ids
 def send(goals):
-	global setGoal, globGoals, canceled
+	global setGoal, globGoals, canceled, reached
 	globGoals = goals
 	if setGoal:
 		rospy.loginfo("ALREADY SENDING SOME GOALS")
@@ -77,6 +78,7 @@ def send(goals):
 	rospy.loginfo("sending " + str(globGoals))
 	# print "entered send(goals)"
 	setGoal = True
+	state = -1
 	for nodeID in globGoals:
 		print "canceled?", canceled
 		if canceled:
@@ -93,7 +95,9 @@ def send(goals):
 		state = alib.get_state()
 		print "result = ", result, ", state = ", state
 		if result and (state == GoalStatus.PREEMPTED or state == GoalStatus.PREEMPTING or state == GoalStatus.RECALLING):
-			break
+			return
+	if not canceled:
+		reached.publish("true")
 	canceled = False
 	setGoal = False
 
@@ -303,7 +307,11 @@ if __name__ == '__main__':
 				# init the actionlib server to send goals (works only locally)
 				alib = actionlib.SimpleActionClient("move_base", MoveBaseAction)
 				reconf = dynamic_reconfigure.client.Client("navigation_velocity_smoother")
+				reached = rospy.Publisher("/goal_reached", String)
 				reconf.update_configuration({"speed_lim_v": 0.4})
+				reconf.update_configuration({"speed_lim_w": 2.7})
+				reconf.update_configuration({"accel_lim_v": 0.5})
+				reconf.update_configuration({"speed_lim_w": 1.0})
 				rospy.loginfo("Waiting for actionlib server")
 				alib.wait_for_server(rospy.Duration(5.0))
 				rospy.loginfo("Actionlib server started.")
