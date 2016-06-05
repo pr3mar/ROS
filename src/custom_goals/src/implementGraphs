@@ -69,13 +69,13 @@ def cancel(msg):
 def send(goals):
 	global setGoal, globGoals, canceled, reached, alib
 	# globGoals = goals
-	if setGoal:
-		rospy.loginfo("CANCELING THE PREVIOUSLY SENDT GOALS")
-		alib.cancel_goal()
-		time = rospy.get_time() + rospy.Duration(1.0).to_sec()
-		while(time > rospy.get_time()):
+	#if setGoal:
+	#	rospy.loginfo("CANCELING THE PREVIOUSLY SENDT GOALS")
+	#	alib.cancel_goal()
+	#	time = rospy.get_time() + rospy.Duration(1.0).to_sec()
+	#	while(time > rospy.get_time()):
 			#print "time = ", time, "time now = ", rospy.get_time() 
-			pass
+	#		pass
 	if(alib == None):
 		rospy.loginfo("WTF? Actionlib is None, send(goals)")
 		return
