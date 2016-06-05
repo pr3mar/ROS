@@ -293,7 +293,7 @@ def publish_faces(non):
             if name == search_name:
                 print "Name we are looking for is the same as the name in our dict. Sending directions."
                 send_pose = marker.pose
-                cancel_pub.publish("cancel")
+                cancel_pub.publish("true")
                 goto_pub.publish(send_pose)
                 status = 1
 
