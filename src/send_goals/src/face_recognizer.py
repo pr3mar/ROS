@@ -32,9 +32,10 @@ alib = None
 detected = 0
 detect_true = 0
 faces_count = {}
-sound_sent = 0
 color = None
 det_entry = None
+max_face_name = None
+max_face_count = 0
 
 #signs
 det_signs = {}
@@ -102,7 +103,7 @@ def speak_robot(str_speech):
 
 
 def recognized_face(data):
-    global markers_pub, detect_true, sound_sent, color, det_entry, faces_count, face_marker, search_name, status, cancel_pub, voice_pub, alib
+    global markers_pub, detect_true, color, det_entry, faces_count, face_marker, search_name, status, cancel_pub, voice_pub, alib, max_face_name, max_face_count
 
     name = data.data
     #print name
@@ -118,20 +119,24 @@ def recognized_face(data):
     thresh = 15
     thresh_reached = False
     
-    if detect_true == 1 and det_entry['name'] == None:
-        if name in faces_count:
-            faces_count[name]['count'] += 1
-            #print faces_count[name]['name']+": "+str(faces_count[name]['count'])
-            if faces_count[name]['count'] > thresh:
-                det_entry['name'] = name
-                print "adding name to the dictionary!: ", det_entry['name'], det_entry['point']
-                # find the closest node in graph
-        else:
-            faces_count[name] = {'count': 1, 'face': False, 'name': name}
-    
+    if name in faces_count:
+        faces_count[name]['count'] += 1
+        #print faces_count[name]['name']+": "+str(faces_count[name]['count'])
+
+        if faces_count[name]['count'] > max_face_count:
+            max_face_count = faces_count[name]['count']
+            max_face_name = name
+
+        if max_face_count > thresh and detect_true == 1 and det_entry['name'] == None:
+            det_entry['name'] = max_face_name
+            print "adding name to the dictionary!: ", det_entry['name'], det_entry['point']
+            # find the closest node in graph
+    else:
+        faces_count[name] = {'count': 1, 'face': False, 'name': name}
+
 
 def detection_thresh(points):
-    global det, detected, detect_true, sound_sent, det_entry, faces_count, detect_again
+    global det, detected, detect_true, det_entry, faces_count, detect_again, max_face_name, max_face_count
 
     for newPoint in points.markers:
         position = newPoint.pose.position
@@ -155,6 +160,11 @@ def detection_thresh(points):
                     min_point = "not"
 
         if min_point == None:
+            max_face_name = None
+            max_face_count = 0                  #reset max counter
+            for key1 in faces_count:            #reset to zero before recognizer starts counting votes for new point in det
+                faces_count[key1]['count'] = 0
+
             detect_true = 0     #when we detect new face, we dont want recognizer to work immediately, but wait for this to become 1 (which means: face detected!!)
             det[str(xp) + ";" + str(yp) + ";" + str(zp)] = {'count': 1, 'detected': False, 'name': None, 'marker': None, 'face': True, 'point': str(xp) + ";" + str(yp) + ";" + str(zp)}
         elif min_point != "not":
@@ -166,12 +176,9 @@ def detection_thresh(points):
                 print "face " + str(detected) + " detected!!!!\n"
                 #print det
 
-                #so we detected a new face - let's reset the counters and ask recognizer what he sees
+                #so we detected a new face - let's reset the counters and ask recognizer what he sees (CHANGED -> now we reset when we add new point to 'det')
                 detect_true = 1     #we are indeed looking at the face - let's allow recognizer to start counting!
                 det_entry = min_point       # global variable, will save name of the person to it once the point is recognized
-                sound_sent = 0
-                for key1 in faces_count:            #reset to zero
-                    faces_count[key1]['count'] = 0
                 
 
         else:
