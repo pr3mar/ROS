@@ -69,9 +69,9 @@ def cancel(msg):
 def send(goals):
 	global setGoal, globGoals, canceled, reached
 	# globGoals = goals
-	if setGoal:
-		rospy.loginfo("ALREADY SENDING SOME GOALS")
-		return
+	# if setGoal:
+		# rospy.loginfo("ALREADY SENDING SOME GOALS")
+		# return
 	if(alib == None):
 		rospy.loginfo("WTF? Actionlib is None, send(goals)")
 		return
@@ -79,6 +79,7 @@ def send(goals):
 	# print "entered send(goals)"
 	setGoal = True
 	state = -1
+	rots = [(0, 0, 90 * 3.1415/180), (0, 0, 90 * 3.1415/180), (0, 0, 180 * 3.1415/180), (0, 0, 270 * 3.1415/180), (0, 0, 0)]
 	for nodeID in goals:
 		print "canceled?", canceled
 		# if canceled:
@@ -96,6 +97,15 @@ def send(goals):
 		print "result = ", result, ", state = ", state
 		if result and (state == GoalStatus.PREEMPTED or state == GoalStatus.PREEMPTING or state == GoalStatus.RECALLING):
 			return
+		for i in range(len(rots)):
+			goal.target_pose.pose.orientation = quaternion_from_euler(rots[1][0], rots[1][1], rots[1][2])
+			alib.send_goal(goal)
+			result = alib.wait_for_result(rospy.Duration(90.0))
+			state = alib.get_state()
+			print "rotation: result = ", result, ", state = ", state
+			if result and (state == GoalStatus.PREEMPTED or state == GoalStatus.PREEMPTING or state == GoalStatus.RECALLING):
+				return
+
 	# if not canceled:
 		# reached.publish("true")
 	# canceled = False
