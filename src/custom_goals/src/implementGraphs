@@ -133,6 +133,8 @@ def removeEdges(pose):
 			if(nearest_node[0] == edge[0][0] or nearest_node[0] == edge[0][1]):
 				graph.removeEdge(edge[0])
 				edge[1] = True
+def honk(msg):
+	pass
 
 def slow(msg):
 	global reconf
