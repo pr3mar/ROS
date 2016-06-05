@@ -67,11 +67,11 @@ def cancel(msg):
 # just a wrapper:
 # send goals to the robot, given a list of node ids
 def send(goals):
-	global setGoal, globGoals, canceled, reached
+	global setGoal, globGoals, canceled, reached, alib
 	# globGoals = goals
-	# if setGoal:
-		# rospy.loginfo("ALREADY SENDING SOME GOALS")
-		# return
+	if setGoal:
+		rospy.loginfo("CANCELING THE PREVIOUS SENDING GOALS")
+		alib.cancel_goal()
 	if(alib == None):
 		rospy.loginfo("WTF? Actionlib is None, send(goals)")
 		return
@@ -119,7 +119,7 @@ def send(goals):
 	# if not canceled:
 		# reached.publish("true")
 	# canceled = False
-	# setGoal = False
+	setGoal = False
 
 #localize by current position of rooomba
 def localizeRoomba(poseWithCov): # get data from /amcl_pose
