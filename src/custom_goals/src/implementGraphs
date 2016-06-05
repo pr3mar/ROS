@@ -116,9 +116,11 @@ def searchStreets(street):
 # go to a specific position (where a face is located)
 def gotoPose(pose):
 	global currentLocation
+	print "going to position", pose
 	nearest_goal_position = graph.localize(pose)
 	goal_position = graph.getNodeByID(nearest_goal_position[0])
 	path = graph.Astar(currentLocation, goal_position)
+	print path
 	send(path)
 
 # recognized sign (oneway) is situated in pose
