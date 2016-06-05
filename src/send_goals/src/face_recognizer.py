@@ -18,7 +18,7 @@ goto_pub = None
 slow_pub = None 
 stop_pub = None
 honk_pub = None
-oneway_pub
+oneway_pub = None
 det = {}
 search_name = None
 
@@ -234,7 +234,7 @@ def recognized_sign(data):
                 print "adding name to the dictionary!: ", det_entry_sign['name'], det_entry_sign['point']
                 
                 # we publish to the appropriate topic
-                if name == 
+                
         else:
             signs_count[name] = {'count': 1, 'face': False, 'name': name}
 
@@ -245,7 +245,7 @@ def voice_action(data):
     #print "You said: "+data.data
 
     #now do sth with that data!
-    names = ['Peter', 'Harry', 'Tina', 'Scarlet', 'Forest', 'Kim', 'Filip', 'Matthew', 'Ellen']
+    names = ['peter', 'harry', 'tina', 'scarlett', 'forest', 'kim', 'filip', 'mathew', 'ellen']
     objects = ['building']
     streets = ['street']
     colours = ['blue', 'yellow', 'green', 'red']
