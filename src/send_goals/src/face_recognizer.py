@@ -44,6 +44,7 @@ sign_detected_again_count = 0
 detect_sign_true = 0
 det_entry_sign = None
 signs_count = {}
+sign_pose = None
 color_map = {'honk': ColorRGBA(85, 96, 240, 1), 'left': ColorRGBA(16, 31, 239, 1), 'limit': ColorRGBA(249, 98, 98, 1), 'oneway': ColorRGBA(245, 1, 1, 1), 'stop': ColorRGBA(152, 6, 6, 1), 'peter': ColorRGBA(128, 255, 0, 1), 'tina': ColorRGBA(51, 51, 255, 1), 'harry': ColorRGBA(242, 208, 15, 1), 'forest': ColorRGBA(255, 128, 0, 1), 'filip': ColorRGBA(102, 51, 0, 1), 'kim': ColorRGBA(19, 237, 226, 1), 'mathew': ColorRGBA(203, 17, 240, 1), 'scarlett': ColorRGBA(111, 255, 0, 1), 'ellen': ColorRGBA(10, 107, 107, 1)}
 # honk: light blue, left: dark blue, limit: pink, oneway: light red, stop: dark red, peter: light green, tina: dark green, harry: light orange,  forest: orange, filip: brown, kim: tirquoise, mathew: purple, scarlett: light green, ellen: dark green-blue 
 
@@ -108,7 +109,8 @@ def recognized_face(data):
 
     #when we have the position, but looking for the rotation
     if status == 2 and search_name == name:
-        #cancel_pub.publish({})
+        goal  = GoalID()
+        cancel_pub.publish(goal)
         #alib.cancel_goal()
         speak_robot(search_name + ", where would you like to go?")
         status = 3
@@ -178,7 +180,7 @@ def detection_thresh(points):
 
 def sign_detection(points):
     #the same as for the face detection
-    global detect_sign_true, det_signs, sign_detected, det_entry_sign, signs_count, det, sign_detected_again, sign_detected_again_count
+    global detect_sign_true, det_signs, sign_detected, det_entry_sign, signs_count, det, sign_detected_again, sign_detected_again_count, sign_pose
 
     for newPoint in points.markers:
         position = newPoint.pose.position
@@ -204,6 +206,7 @@ def sign_detection(points):
                     min_point = "not"
                     sign_detected_again_count += 1
                     if sign_detected_again_count == 25:
+                        sign_pose = newPoint.pose
                         sign_detected_again = 1
                         for key1 in signs_count:            #reset to zero
                             signs_count[key1]['count'] = 0
@@ -235,7 +238,7 @@ def sign_detection(points):
 
 
 def recognized_sign(data):
-    global signs_count, detect_sign_true, det_entry_sign, sign_detected_again, honk_pub, stop_pub, slow_pub, oneway_pub
+    global signs_count, detect_sign_true, det_entry_sign, sign_detected_again, honk_pub, stop_pub, slow_pub, oneway_pub, sign_pose
 
     name = data.data
     #print name
@@ -262,8 +265,8 @@ def recognized_sign(data):
                         stop_pub.publish("true")
                     elif name=='limit':   
                         slow_pub.publish("true")  
-                    elif name=='oneway':   
-                        oneway_pub.publish("true")  
+                    elif name=='oneway':  
+                        oneway_pub.publish(sign_pose)  
 
         else:
             signs_count[name] = {'count': 1, 'face': False, 'name': name}
