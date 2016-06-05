@@ -21,6 +21,7 @@ honk_pub = None
 oneway_pub = None
 det = {}
 search_name = None
+sent_street = 0
 
 #faces
 detected = 0
@@ -225,7 +226,7 @@ def sign_detection(points):
             pass
 
 def recognized_sign(data):
-    global signs_count, detect_sign_true, det_entry_sign, sign_detected_again, honk_pub
+    global signs_count, detect_sign_true, det_entry_sign, sign_detected_again, honk_pub, stop_pub, slow_pub, oneway_pub
 
     name = data.data
     #print name
@@ -248,19 +249,19 @@ def recognized_sign(data):
                     print "we already have that sign, but we see it again!"
                     if name == 'honk':
                         honk_pub.publish("true")
-                    elif name=='stop'   
+                    elif name=='stop':
                         stop_pub.publish("true")
-                    elif name=='limit'   
+                    elif name=='limit':   
                         slow_pub.publish("true")  
-                    elif name=='oneway'   
+                    elif name=='oneway':   
                         oneway_pub.publish("true")  
-                        
+
         else:
             signs_count[name] = {'count': 1, 'face': False, 'name': name}
 
     
 def voice_action(data):
-    global search_name
+    global search_name, colour_street, street_pub
 
     #print "You said: "+data.data
 
@@ -291,11 +292,11 @@ def voice_action(data):
 
     print "Mission Impossible: %s %s %s %s %s"%(name,  colour_building, building[0], colour_street, street[0])
     #speak_robot("Where would you like to go, " + name)
-    street_pub.publish(colour_street)
+    #street_pub.publish(colour_street)
 
 
 def publish_faces(non):
-    global det, markers_pub, search_name, goto_pub, cancel_pub, status
+    global det, markers_pub, search_name, goto_pub, cancel_pub, status, colour_street, sent_street, street_pub
     
     markers = []
     marker = Marker()
@@ -316,6 +317,7 @@ def publish_faces(non):
                 cancel_pub.publish("true")
                 goto_pub.publish(send_pose)
                 status = 1
+                sent_street = 1     #we don't have to send street color, if we know where the face is
 
         if name in color_map:
             marker.color = color_map[name]
@@ -325,6 +327,10 @@ def publish_faces(non):
         markers.append(marker)
         
     markers_pub.publish(markers)
+
+    if sent_street == 0:
+        street_pub.publish(colour_street)
+        sent_street = 1
 
 
 def face_recognizer():
