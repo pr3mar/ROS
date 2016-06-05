@@ -96,7 +96,8 @@ def send(goals):
 		result = alib.wait_for_result(rospy.Duration(90.0))
 		state = alib.get_state()
 		print "result = ", result, ", state = ", state
-		if result and (state == GoalStatus.PREEMPTED or state == GoalStatus.PREEMPTING or state == GoalStatus.RECALLING):
+		if result and state != GoalStatus.SUCCEEDED:#(state == GoalStatus.PREEMPTED or state == GoalStatus.PREEMPTING or state == GoalStatus.RECALLING or state == GoalStatus.PENDING):
+			goals = []
 			return
 		for i in range(len(rots)):
 			tmp = quaternion_from_euler(rots[i][0], rots[i][1], rots[i][2])
@@ -109,13 +110,14 @@ def send(goals):
 			result = alib.wait_for_result(rospy.Duration(90.0))
 			state = alib.get_state()
 			print "rotation: result = ", result, ", state = ", state
-			if result and (state == GoalStatus.PREEMPTED or state == GoalStatus.PREEMPTING or state == GoalStatus.RECALLING):
-				return
+			if result and state != GoalStatus.SUCCEEDED:# and (state == GoalStatus.PREEMPTED or state == GoalStatus.PREEMPTING or state == GoalStatus.RECALLING or state == GoalStatus.PENDING):
+				goals = []
+				break
 
 	# if not canceled:
 		# reached.publish("true")
 	# canceled = False
-	setGoal = False
+	# setGoal = False
 
 #localize by current position of rooomba
 def localizeRoomba(poseWithCov): # get data from /amcl_pose
