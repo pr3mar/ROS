@@ -353,7 +353,7 @@ def voice_action(data):
                         
                     goto_pub.publish(send_pose)     #sending coordinates of the person
     
-        if just_sent = 0:
+        if just_sent == 0:
             sent_street = 0
             status = 0
 
