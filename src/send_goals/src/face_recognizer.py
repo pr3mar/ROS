@@ -4,7 +4,7 @@ import nltk
 from nltk.metrics import edit_distance
 import rospy
 import actionlib
-from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal, MoveBaseActionGoal
+from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal, MoveBaseActionGoal, cancelGoal
 from std_msgs.msg import String, ColorRGBA
 from geometry_msgs.msg import *
 from visualization_msgs.msg import Marker, MarkerArray
@@ -107,7 +107,7 @@ def recognized_face(data):
 
     #when we have the position, but looking for the rotation
     if status == 2 and search_name == name:
-        #cancel_pub.publish("true")
+        #cancel_pub.publish({})
         #alib.cancel_goal()
         speak_robot(search_name + ", where would you like to go?")
         status = 3
@@ -304,8 +304,8 @@ def voice_action(data):
     
     #if status != 2 (2 = waiting for command) we reset everything because we received a new goal
     #cancel_pub.publish("true")
-    if status < 2:
-        print status
+    if status > 2:
+        print "status > 2: not resetting!"
     else:
         sent_street = 0
         status = 0
@@ -330,8 +330,8 @@ def publish_faces(non):
             if name == search_name:
                 print "Name we are looking for is the same as the name in our dict. Sending directions."
                 send_pose = marker.pose
-                #cancel_pub.publish("true")
-                alib.cancel_goal()
+                cancel_pub.publish({})
+                #alib.cancel_goal()
                 print "cancelling in loop"
                 #rospy.
                 goto_pub.publish(send_pose)
@@ -349,8 +349,8 @@ def publish_faces(non):
     
     if sent_street == 0 and colour_street != None and status == 0:
         print "sending goal!"
-        #cancel_pub.publish("true")
-        alib.cancel_goal()
+        cancel_pub.publish({})
+        #alib.cancelGoal()
         print "canceling previous goal!"
         street_pub.publish(colour_street)
         sent_street = 1
@@ -369,7 +369,7 @@ def face_recognizer():
     alib = actionlib.SimpleActionClient("move_base", MoveBaseAction)
     rospy.init_node('face_recognizer', anonymous=True)
     markers_pub = rospy.Publisher('/viz/markers', MarkerArray, queue_size=100)
-    cancel_pub = rospy.Publisher('/cancel', String, queue_size=100)
+    cancel_pub = rospy.Publisher('/move_base/cancel', String, queue_size=100)
     street_pub = rospy.Publisher('/search/street', String, queue_size=100)
     goto_pub = rospy.Publisher('/goto', Pose, queue_size=100)
     slow_pub = rospy.Publisher('/sign/slow', String, queue_size=100)
