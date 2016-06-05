@@ -70,16 +70,16 @@ def send(goals):
 	global setGoal, globGoals, canceled, reached, alib
 	# globGoals = goals
 	if setGoal:
-		rospy.loginfo("CANCELING THE PREVIOUS SENDING GOALS")
+		rospy.loginfo("CANCELING THE PREVIOUSLY SENDT GOALS")
 		alib.cancel_goal()
 	if(alib == None):
 		rospy.loginfo("WTF? Actionlib is None, send(goals)")
 		return
-	rospy.loginfo("sending " + str(globGoals))
+	rospy.loginfo("sending " + str(goals))
 	# print "entered send(goals)"
 	setGoal = True
 	state = -1
-	rots = [(0, 0, 90 * 3.1415/180), (0, 0, 90 * 3.1415/180), (0, 0, 180 * 3.1415/180), (0, 0, 270 * 3.1415/180)]
+	rots = [(0, 0, 90 * 3.1415/180), (0, 0, 90 * 3.1415/180), (0, 0, 180 * 3.1415/180), (0, 0, 270 * 3.1415/180), (0, 0, 0)]
 	print goals
 	for nodeID in goals:
 		#print "canceled?", canceled
@@ -97,9 +97,9 @@ def send(goals):
 		state = alib.get_state()
 		print "result = ", result, ", state = ", state
 		if state != GoalStatus.SUCCEEDED:#(state == GoalStatus.PREEMPTED or state == GoalStatus.PREEMPTING or state == GoalStatus.RECALLING or state == GoalStatus.PENDING):
-			rospy.loginfo("CANCELED THE FUCKING GOALS")
+			rospy.loginfo("[main] CANCELED THE FUCKING GOALS")
 			goals = []
-			break
+			return
 		for i in range(len(rots)):
 			tmp = quaternion_from_euler(rots[i][0], rots[i][1], rots[i][2])
 			# print tmp
@@ -112,9 +112,9 @@ def send(goals):
 			state = alib.get_state()
 			print "rotation: result = ", result, ", state = ", state
 			if state != GoalStatus.SUCCEEDED:# and (state == GoalStatus.PREEMPTED or state == GoalStatus.PREEMPTING or state == GoalStatus.RECALLING or state == GoalStatus.PENDING):
-				rospy.loginfo("CANCELED THE FUCKING GOALS")
+				rospy.loginfo("[rot] CANCELED THE FUCKING GOALS")
 				goals = []
-				break
+				return
 
 	# if not canceled:
 		# reached.publish("true")
