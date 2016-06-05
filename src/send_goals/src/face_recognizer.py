@@ -248,7 +248,13 @@ def recognized_sign(data):
                     print "we already have that sign, but we see it again!"
                     if name == 'honk':
                         honk_pub.publish("true")
-                
+                    elif name=='stop'   
+                        stop_pub.publish("true")
+                    elif name=='limit'   
+                        slow_pub.publish("true")  
+                    elif name=='oneway'   
+                        oneway_pub.publish("true")  
+                        
         else:
             signs_count[name] = {'count': 1, 'face': False, 'name': name}
 
