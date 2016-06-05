@@ -163,7 +163,7 @@ def slow(msg):
 	if msg.data == "true":
 		reconf.update_configuration({"max_vel_x": 0.1})
 		reconf.update_configuration({"max_rot_vel": 2.5})
-		reconf.update_configuration({"accel_lim_v": 0.35})
+		reconf.update_configuration({"acc_lim_v": 0.35})
 		rospy.Timer(rospy.Duration(10), resetSpeed)
 
 def stop(msg):
@@ -177,7 +177,7 @@ def resetSpeed():
 	global reconf
 	reconf.update_configuration({"max_vel_x": 0.4})
 	reconf.update_configuration({"max_rot_vel": 5.0})
-	reconf.update_configuration({"accel_lim_v": 0.75})
+	reconf.update_configuration({"acc_lim_v": 0.75})
 
 if __name__ == '__main__':
 	try:
@@ -310,7 +310,7 @@ if __name__ == '__main__':
 				reached = rospy.Publisher("/goal_reached", String)
 				reconf.update_configuration({"max_vel_x": 0.4})
 				reconf.update_configuration({"max_rot_vel": 5.0})
-				reconf.update_configuration({"accel_lim_v": 0.75})
+				reconf.update_configuration({"acc_lim_v": 0.75})
 				rospy.loginfo("Waiting for actionlib server")
 				alib.wait_for_server(rospy.Duration(5.0))
 				rospy.loginfo("Actionlib server started.")
