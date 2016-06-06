@@ -235,7 +235,7 @@ def sign_detection(points):
             det[str(xp) + ";" + str(yp) + ";" + str(zp)] = {'count': 1, 'detected': False, 'name': None, 'marker': None, 'face': False, 'point': str(xp) + ";" + str(yp) + ";" + str(zp)}
         elif min_point != "not":
             min_point['count'] += 1
-            if min_point['count'] > 25:
+            if min_point['count'] > 10:
                 min_point['detected'] = True
                 min_point['marker'] = newPoint      #we save the last marker
                 sign_detected += 1
@@ -256,7 +256,7 @@ def recognized_sign(data):
     name = data.data
     #print name
 
-    thresh = 15
+    thresh = 5
     thresh_reached = False
     
     if name in  signs_count:
@@ -343,7 +343,6 @@ def voice_action(data):
                     status = 1
                     just_sent = 1
                     print "Name we are looking for is the same as the name in our dict. Sending directions. name we are looking for: ", search_name, "Name in our dict: ", name 
-                    send_pose = marker.pose
                     goal = GoalID()
                     cancel_pub.publish(goal)
                     #alib.cancel_goal()
@@ -382,7 +381,7 @@ def publish_faces(non):
             #print "default color"
             marker.color = ColorRGBA(0, 0, 0, 1)
 
-        print "marker color: " + marker.color
+        #print "marker color: " + marker.color
         markers.append(marker)
 
         #lets check if we already have the face we are looking for (status = 0 means we are looking for a face)
@@ -402,7 +401,7 @@ def publish_faces(non):
 			        #print "time = ", time, "time now = ", rospy.get_time() 
 			        pass
 	                
-                #goto_pub.publish(send_pose)
+                goto_pub.publish(send_pose)
                 
                 
 
