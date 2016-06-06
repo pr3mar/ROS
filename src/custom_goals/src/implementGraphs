@@ -140,7 +140,7 @@ def gotoStreet(street):
 		streets = graph.getByColorSorted(currentLocation.goal.target_pose.pose, colorMap[street.data])
 		currentGoal = (street, 2)
 		path = graph.Astar(currentLocation, streets[0][0])
-		path = path + streets[0][0]
+		path = path + [streets[0][0].id]
 		rospy.loginfo("exploring with path = " + str(path))
 		send(path)
 
@@ -173,7 +173,7 @@ def removeEdges(pose):
 				removedNow = graph.removeEdge(el[0])
 				el[1] = True
 				print "removed:", el[0]
-	if removedNow:
+	if removedNow and currentGoal != None:
 		goal = GoalID()
 		cancel_pub.publish(goal)
 		time = rospy.get_time() + rospy.Duration(1.0).to_sec()
