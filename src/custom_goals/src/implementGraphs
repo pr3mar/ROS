@@ -172,6 +172,7 @@ def removeEdges(pose):
 	global poses_to_remove, currentGoal, alib, cancel_pub, graph
 	nearest_node = graph.localize(pose)
 	removedNow = False
+	print "going to remove!!!"
 	for edge in poses_to_remove:
 		if not poses_to_remove[edge][1]:
 			el = poses_to_remove[edge]
@@ -198,10 +199,11 @@ def removeEdges(pose):
 			rospy.loginfo("WTF???? (remove edges)")
 
 def honk(msg):
-	pass
+	print "HONK!", msg
 
 def slow(msg):
 	global reconf
+	print "goint go slow down!!!", msg
 	if msg.data == "true":
 		print "limit sign!"
 		reconf.update_configuration({"max_vel_x": 0.05})
@@ -215,6 +217,7 @@ def slow(msg):
 
 def stop(msg):
 	global reconf
+	print "going to stop!!", msg
 	if msg.data == "true":
 		print "stop sign!!"
 		reconf.update_configuration({"max_vel_x": 0.0})
