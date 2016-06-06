@@ -89,7 +89,7 @@ def send(goals):
 		if state != GoalStatus.SUCCEEDED:#(state == GoalStatus.PREEMPTED or state == GoalStatus.PREEMPTING or state == GoalStatus.RECALLING or state == GoalStatus.PENDING):
 			rospy.loginfo("[main] CANCELED THE FUCKING GOALS")
 			goals = []
-			return
+			return False
 		if preset:
 			continue
 		for i in range(len(rots)):
@@ -106,10 +106,11 @@ def send(goals):
 			if state != GoalStatus.SUCCEEDED:# and (state == GoalStatus.PREEMPTED or state == GoalStatus.PREEMPTING or state == GoalStatus.RECALLING or state == GoalStatus.PENDING):
 				rospy.loginfo("[rot] CANCELED THE FUCKING GOALS")
 				goals = []
-				return
+				return False
 	if preset:
 		reached.publish(String("true"))
 	setGoal = False
+	return True
 
 #localize by current position of rooomba
 def localizeRoomba(poseWithCov): # get data from /amcl_pose
@@ -122,19 +123,22 @@ def localizeRoomba(poseWithCov): # get data from /amcl_pose
 def searchStreets(street):
 	global currentLocation, colorMap, canceled, currentGoal, graph
 	# canceled = False
-	graph.printGraph()
+	#graph.printGraph()
 	print "going to explore street:", street.data, colorMap[street.data]
 	if street.data in colorMap:
 		streets = graph.getByColorSorted(currentLocation.goal.target_pose.pose, colorMap[street.data])
 		currentGoal = (street, 1)
-		path = graph.Astar(currentLocation, streets[0][0])
-		path = path + [x[0].id for x in streets[1:]]
-		rospy.loginfo("exploring with path = " + str(path))
-		send(path)
+		print streets[0][0]
+		for street in streets:
+			path = graph.Astar(currentLocation, street[0])
+			currentGoal = graph.getNodeByID(path[-1])
+			rospy.loginfo("exploring with path = " + str(path))
+			if not send(path):
+				break
 
 # search on street X
 def gotoStreet(street):
-	global currentLocation, colorMap, canceled, currentGoal, graph
+	global currentLocation, colorMap, canceled, currentGoal, graph, preset
 	# canceled = False
 	print "going to street:", street.data, colorMap[street.data]
 	if street.data in colorMap:
@@ -142,8 +146,10 @@ def gotoStreet(street):
 		currentGoal = (street, 2)
 		path = graph.Astar(currentLocation, streets[0][0])
 		path = path + [streets[0][0].id]
+		preset = True
 		rospy.loginfo("exploring with path = " + str(path))
 		send(path)
+		preset = False
 
 # go to a specific position (where a face is located)
 def gotoPose(pose):
