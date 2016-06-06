@@ -21,12 +21,14 @@ globGoals = []
 graph = None
 alib = None
 currentLocation = None
+currentGoal = None
 setGoal = False
 poses_to_remove = {"3-4": [(3, 4), False], "14-16": [(14, 16), False]}
 reconf = None
 canceled = False
 reached = None
 preset = False
+cancel_pub = None
 
 # maybe not usefull at all, just for exploring
 def sendAllGoals():
@@ -118,12 +120,12 @@ def localizeRoomba(poseWithCov): # get data from /amcl_pose
 
 # search on street X
 def searchStreets(street):
-	global currentLocation, colorMap, canceled
+	global currentLocation, colorMap, canceled, currentGoal
 	# canceled = False
 	print "going to explore street:", street.data, colorMap[street.data]
 	if street.data in colorMap:
 		streets = graph.getByColorSorted(currentLocation.goal.target_pose.pose, colorMap[street.data])
-		#print streets
+		currentGoal = (street, 1)
 		path = graph.Astar(currentLocation, streets[0][0])
 		path = path + [x[0].id for x in streets[1:]]
 		rospy.loginfo("exploring with path = " + str(path))
@@ -131,12 +133,12 @@ def searchStreets(street):
 
 # search on street X
 def gotoStreet(street):
-	global currentLocation, colorMap, canceled
+	global currentLocation, colorMap, canceled, currentGoal
 	# canceled = False
 	print "going to street:", street.data, colorMap[street.data]
 	if street.data in colorMap:
 		streets = graph.getByColorSorted(currentLocation.goal.target_pose.pose, colorMap[street.data])
-		#print streets
+		currentGoal = (street, 2)
 		path = graph.Astar(currentLocation, streets[0][0])
 		path = path + streets[0][0]
 		rospy.loginfo("exploring with path = " + str(path))
@@ -152,6 +154,7 @@ def gotoPose(pose):
 	path = graph.Astar(currentLocation, goal_position)[1:]
 	rospy.loginfo("going with path = " + str(path))
 	preset = True
+	currentGoal = (pose, 3)
 	send(path)
 	preset = False
 
@@ -159,16 +162,32 @@ def gotoPose(pose):
 # find the nearest node and remove the edge
 # only works if the nearest nodes are from the predefined global poses_to_remove
 def removeEdges(pose):
-	global poses_to_remove
+	global poses_to_remove, currentGoal, alib, cancel_pub
 	print "removing edges!"
 	nearest_node = graph.localize(pose)
+	removedNow = False
 	for edge in poses_to_remove:
-		if not nearest_node[1]:
+		if not poses_to_remove[edge][1]:
 			el = poses_to_remove[edge]
-			if(nearest_node[0] == edge[0][0] or nearest_node[0] == edge[0][1]):
-				print "removed edges:", graph.removeEdge(edge[0])
-				edge[1] = True
-				print "removed:", edge
+			if(nearest_node[0] == el[0][0] or nearest_node[0] == el[0][1]):
+				removedNow = graph.removeEdge(el[0])
+				el[1] = True
+				print "removed:", el[0]
+	if removedNow:
+		goal = GoalID()
+		cancel_pub.publish(goal)
+		time = rospy.get_time() + rospy.Duration(1.0).to_sec()
+		while(time > rospy.get_time()):
+		    pass
+		if currentGoal[1] == 1:
+			searchStreets(currentGoal[0])
+		elif currentGoal[1] == 2:
+			gotoStreet(currentGoal[0])
+		elif currentGoal[1] == 3:
+			gotoPose(currentGoal[0])
+		else:
+			rospy.loginfo("WTF???? (remove edges)")
+
 def honk(msg):
 	pass
 
@@ -327,6 +346,7 @@ if __name__ == '__main__':
 				alib = actionlib.SimpleActionClient("move_base", MoveBaseAction)
 				reconf = dynamic_reconfigure.client.Client("/move_base/DWAPlannerROS")
 				reached = rospy.Publisher("/goal_reached", String, queue_size=100)
+				cancel_pub = rospy.Publisher('/move_base/cancel', GoalID, queue_size=100)
 				reconf.update_configuration({"max_vel_x": 0.4})
 				reconf.update_configuration({"max_rot_vel": 1.5})
 				reconf.update_configuration({"xy_goal_tolerance": 0.25})
