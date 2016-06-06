@@ -96,7 +96,7 @@ def send(goals):
 			goal.target_pose.pose.orientation.x = tmp[0]
 			goal.target_pose.pose.orientation.y = tmp[1]
 			goal.target_pose.pose.orientation.z = tmp[2]
-			goal.target_pose.pose.orientation.w = tmp[3]
+			goal.target_pose.pose.orientation.w = tmp[3]	
 			alib.send_goal(goal)
 			result = alib.wait_for_result(rospy.Duration(90.0))
 			state = alib.get_state()
@@ -128,7 +128,20 @@ def searchStreets(street):
 		path = path + [x[0].id for x in streets[1:]]
 		rospy.loginfo("exploring with path = " + str(path))
 		send(path)
-	
+
+# search on street X
+def gotoStreet(street):
+	global currentLocation, colorMap, canceled
+	# canceled = False
+	print "going to street:", street.data, colorMap[street.data]
+	if street.data in colorMap:
+		streets = graph.getByColorSorted(currentLocation.goal.target_pose.pose, colorMap[street.data])
+		#print streets
+		path = graph.Astar(currentLocation, streets[0][0])
+		path = path + streets[0][0]
+		rospy.loginfo("exploring with path = " + str(path))
+		send(path)
+
 # go to a specific position (where a face is located)
 def gotoPose(pose):
 	global currentLocation, canceled, preset
@@ -188,7 +201,7 @@ def stop(msg):
 if __name__ == '__main__':
 	try:
 		test = False
-		doROS = True
+		doROS = False
 		if test:
 			# solely for testing purposes:
 			goals = []
@@ -325,7 +338,8 @@ if __name__ == '__main__':
 				rospy.Subscriber("/amcl_pose", PoseWithCovarianceStamped, localizeRoomba)
 				rospy.Subscriber("/cancel", String, cancel)
 				rospy.Subscriber("/search/street", String, searchStreets)
-				rospy.Subscriber("/goto", Pose, gotoPose)
+				rospy.Subscriber("/goto/pose", Pose, gotoPose)
+				rospy.Subscriber("/goto/street", Pose, gotoStreet)
 				rospy.Subscriber("/sign/slow", String, slow)
 				rospy.Subscriber("/sign/stop", String, stop)
 				rospy.Subscriber("/sign/honk", String, honk)
