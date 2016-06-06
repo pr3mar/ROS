@@ -226,11 +226,11 @@ def sign_detection(points):
                         elif name =='limit':   
                             slow_pub.publish("true")  
                         elif name =='oneway':  
-                            oneway_pub.publish(newPoint.pose)   #this is probably wrong -> not necessarily the same frame?
+                            oneway_pub.publish(det_entry_sign['marker'].pose)   #this is probably wrong -> not necessarily the same frame?
 
 
         if min_point == None:
-            sign_detected_again = 0
+            sign_detected_again = 0             #not okay!
             max_sign_name = None
             max_sign_count = 0                  #reset max counter
             for key1 in signs_count:            #reset to zero
@@ -274,7 +274,7 @@ def recognized_sign(data):
         if max_sign_count > thresh:
             if detect_sign_true == 1 and det_entry_sign['name'] == None:
                 #detect_sign_true = 0
-
+                sign_detected_again = 1
                 det_entry_sign['name'] = max_sign_name
                 print "adding name to the dictionary!: ", det_entry_sign['name'], det_entry_sign['point']
         
