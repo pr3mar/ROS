@@ -380,6 +380,7 @@ def publish_faces(non):
             #print "default color"
             marker.color = ColorRGBA(0, 0, 0, 1)
 
+        print "marker color: " + marker.color
         markers.append(marker)
 
         #lets check if we already have the face we are looking for (status = 0 means we are looking for a face)
