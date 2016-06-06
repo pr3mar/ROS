@@ -235,7 +235,7 @@ def sign_detection(points):
             det[str(xp) + ";" + str(yp) + ";" + str(zp)] = {'count': 1, 'detected': False, 'name': None, 'marker': None, 'face': False, 'point': str(xp) + ";" + str(yp) + ";" + str(zp)}
         elif min_point != "not":
             min_point['count'] += 1
-            if min_point['count'] > 10:
+            if min_point['count'] > 15:
                 min_point['detected'] = True
                 min_point['marker'] = newPoint      #we save the last marker
                 sign_detected += 1
@@ -256,7 +256,7 @@ def recognized_sign(data):
     name = data.data
     #print name
 
-    thresh = 5
+    thresh = 7
     thresh_reached = False
     
     if name in  signs_count:
@@ -276,7 +276,8 @@ def recognized_sign(data):
                 # we publish to the appropriate topic
                 #print "we already have that sign, but we see it again!"
                 if max_sign_name == 'honk':
-                    honk_pub.publish("true")
+                    #honk_pub.publish("true")
+                    speak_robot("Beeeeeeeeeeeeeeeeeeeeep! Bip bip!")
                 elif max_sign_name =='stop':
                     stop_pub.publish("true")
                 elif max_sign_name =='limit':   
@@ -324,7 +325,7 @@ def voice_action(data):
     #street_pub.publish(colour_street)
     just_sent = 0
 
-    if status > 2:
+    if status == 3:
         print "status > 2: This is command from person."
         goto_street_pub.publish(colour_street)
     
