@@ -373,9 +373,9 @@ def publish_faces(non):
         if name in color_map:
             #print "custom color"
             marker.color = color_map[name]
-            marker.color.r = marker.color.r / 255
-            marker.color.g = marker.color.g / 255
-            marker.color.b = marker.color.b / 255
+            marker.color.r = marker.color.r / 255.0
+            marker.color.g = marker.color.g / 255.0
+            marker.color.b = marker.color.b / 255.0
         else:
             #print "default color"
             marker.color = ColorRGBA(0, 0, 0, 1)
@@ -427,6 +427,7 @@ def publish_faces(non):
 def goal_reached(data):
     global status
 
+    print "face reached!"
     #when we have the position, but looking for the rotation (TO-DO: wait for the detection first)
     if data.data == 'true' and status == 1:
         status = 2
