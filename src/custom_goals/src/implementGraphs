@@ -163,17 +163,18 @@ def gotoPose(pose):
 # only works if the nearest nodes are from the predefined global poses_to_remove
 def removeEdges(pose):
 	global poses_to_remove, currentGoal, alib, cancel_pub
-	print "removing edges!"
 	nearest_node = graph.localize(pose)
 	removedNow = False
 	for edge in poses_to_remove:
 		if not poses_to_remove[edge][1]:
 			el = poses_to_remove[edge]
-			if(nearest_node[0] == el[0][0] or nearest_node[0] == el[0][1]):
+			#print el[0][0] == nearest_node[0], el[0][1] == nearest_node[0]
+			if(nearest_node[0].id == el[0][0] or nearest_node[0].id == el[0][1]):
 				removedNow = graph.removeEdge(el[0])
 				el[1] = True
-				print "removed:", el[0]
+				print "removing edges!"
 	if removedNow and currentGoal != None:
+		print "changing the plan!"
 		goal = GoalID()
 		cancel_pub.publish(goal)
 		time = rospy.get_time() + rospy.Duration(1.0).to_sec()
