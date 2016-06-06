@@ -129,9 +129,9 @@ def searchStreets(street):
 		streets = graph.getByColorSorted(currentLocation.goal.target_pose.pose, colorMap[street.data])
 		currentGoal = (street, 1)
 		print streets[0][0]
-		for street in streets:
+		for street in streets:sea
 			path = graph.Astar(currentLocation, street[0])
-			currentGoal = graph.getNodeByID(path[-1])
+			currentGoal = (path[-1], 1)
 			rospy.loginfo("exploring with path = " + str(path))
 			if not send(path):
 				break
@@ -140,10 +140,10 @@ def searchStreets(street):
 def gotoStreet(street):
 	global currentLocation, colorMap, canceled, currentGoal, graph, preset
 	# canceled = False
+	currentGoal = (street, 2)
 	print "going to street:", street.data, colorMap[street.data]
 	if street.data in colorMap:
 		streets = graph.getByColorSorted(currentLocation.goal.target_pose.pose, colorMap[street.data])
-		currentGoal = (street, 2)
 		path = graph.Astar(currentLocation, streets[0][0])
 		path = path + [streets[0][0].id]
 		preset = True
@@ -172,7 +172,7 @@ def removeEdges(pose):
 	global poses_to_remove, currentGoal, alib, cancel_pub, graph
 	nearest_node = graph.localize(pose)
 	removedNow = False
-	print "going to remove!!!"
+	#print "going to remove!!!"
 	for edge in poses_to_remove:
 		if not poses_to_remove[edge][1]:
 			el = poses_to_remove[edge]
