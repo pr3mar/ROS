@@ -370,16 +370,18 @@ def publish_faces(non):
 
         name = det[key]['name']
         marker = det[key]['marker']
+        marker.type = 9
+        marker.text = name
         #print "coloring marker: ", name, color_map[name]
-        if name in color_map:
+        #if name in color_map:
             #print "custom color"
-            marker.color = color_map[name]
-            marker.color.r = marker.color.r / 255.0
-            marker.color.g = marker.color.g / 255.0
-            marker.color.b = marker.color.b / 255.0
-        else:
+            #marker.color = color_map[name]
+            #marker.color.r = marker.color.r / 255.0
+            #marker.color.g = marker.color.g / 255.0
+            #marker.color.b = marker.color.b / 255.0
+        #else:
             #print "default color"
-            marker.color = ColorRGBA(0, 0, 0, 1)
+            #marker.color = ColorRGBA(0, 0, 0, 1)
 
         #print "marker color: " + marker.color
         markers.append(marker)
