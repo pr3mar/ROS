@@ -273,8 +273,9 @@ def recognized_sign(data):
                 print "adding name to the dictionary!: ", det_entry_sign['name'], det_entry_sign['point']
             
             elif sign_detected_again == 1:
+                sign_detected_again = 0
                 # we publish to the appropriate topic
-                #print "we already have that sign, but we see it again!"
+                print "we already have that sign, but we see it again!: ", max_sign_name
                 if max_sign_name == 'honk':
                     #honk_pub.publish("true")
                     speak_robot("Beeeeeeeeeeeeeeeeeeeeep! Bip bip!")
