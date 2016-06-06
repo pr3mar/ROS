@@ -18,6 +18,7 @@ voice_pub = None
 markers_pub = None
 cancel_pub = None
 goto_pub = None
+goto_street_pub = None
 slow_pub = None 
 stop_pub = None
 honk_pub = None
@@ -111,12 +112,12 @@ def recognized_face(data):
     #print name
 
     #when we have the position, but looking for the rotation
-    if status == 2 and search_name == name:
-        goal = GoalID()
-        #cancel_pub.publish(goal)
-        #alib.cancel_goal()
-        speak_robot(search_name + ", where would you like to go?")
-        status = 3
+    #if status == 2 and search_name == name:
+    #   goal = GoalID()
+    #    cancel_pub.publish(goal)
+    #    alib.cancel_goal()
+    #    speak_robot(search_name + ", where would you like to go?")
+    #    status = 3
     
     thresh = 5
     thresh_reached = False
@@ -325,6 +326,7 @@ def voice_action(data):
 
     if status > 2:
         print "status > 2: This is command from person."
+        goto_street_pub.publish(colour_street)
     
     else:
         for key in det:
@@ -431,17 +433,20 @@ def goal_reached(data):
     #when we have the position, but looking for the rotation (TO-DO: wait for the detection first)
     if data.data == 'true' and status == 1:
         status = 2
+        speak_robot(search_name + ", where would you like to go?")
+        status = 3
 
 
 def face_recognizer():
-    global markers_pub, voice_pub, cancel_pub, street_pub, goto_pub, slow_pub, stop_pub, honk_pub, oneway_pub, alib
+    global markers_pub, voice_pub, cancel_pub, street_pub, goto_pub, slow_pub, stop_pub, honk_pub, oneway_pub, alib, goto_street_pub
 
     alib = actionlib.SimpleActionClient("move_base", MoveBaseAction)
     rospy.init_node('face_recognizer', anonymous=True)
     markers_pub = rospy.Publisher('/viz/markers', MarkerArray, queue_size=100)
     cancel_pub = rospy.Publisher('/move_base/cancel', GoalID, queue_size=100)
     street_pub = rospy.Publisher('/search/street', String, queue_size=100)
-    goto_pub = rospy.Publisher('/goto', Pose, queue_size=100)
+    goto_pub = rospy.Publisher('/goto/pose', Pose, queue_size=100)
+    goto_street_pub = rospy.Publisher('/goto/street', String, queue_size=100)
     slow_pub = rospy.Publisher('/sign/slow', String, queue_size=100)
     stop_pub = rospy.Publisher('/sign/stop', String, queue_size=100)
     honk_pub = rospy.Publisher('/sign/honk', String, queue_size=100)
