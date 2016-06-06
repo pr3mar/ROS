@@ -276,6 +276,7 @@ def recognized_sign(data):
                 print "adding name to the dictionary!: ", det_entry_sign['name'], det_entry_sign['point']
         
                 # we publish to the appropriate topic
+
                 if max_sign_name == 'honk':
                     #honk_pub.publish("true")
                     speak_robot("Beeeeeeeeeeeeeeeeeeeeep! Bip bip!")
@@ -284,7 +285,7 @@ def recognized_sign(data):
                 elif max_sign_name =='limit':   
                     slow_pub.publish("true")  
                 elif max_sign_name =='oneway':  
-                    oneway_pub.publish(sign_pose)   #this is probably wrong -> not necessarily the same frame?
+                    oneway_pub.publish(det_entry_sign['marker'].pose)
 
     else:
         signs_count[name] = {'count': 1, 'face': False, 'name': name}
