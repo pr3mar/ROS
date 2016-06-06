@@ -215,7 +215,7 @@ def sign_detection(points):
                     # we already have that point detected, lets count if it's really that point
                     min_point = "not"
                     sign_detected_again_count += 1
-                    if sign_detected_again_count == 25:
+                    if sign_detected_again_count == 15:
                         sign_pose = newPoint.pose
                         sign_detected_again = 1
                         for key1 in signs_count:            #reset to zero
@@ -429,7 +429,7 @@ def publish_faces(non):
         
 
 def goal_reached(data):
-    global status
+    global status, search_name
 
     print "face reached!"
     #when we have the position, but looking for the rotation (TO-DO: wait for the detection first)
@@ -437,6 +437,10 @@ def goal_reached(data):
         status = 2
         speak_robot(search_name + ", where would you like to go?")
         status = 3
+
+    elif data.data == 'false' and status == 1:
+        speak_robot("Dispatcher, you said "+search_name+" is waiting on the "+colour_street + " street, right?")
+        status = -1    
 
     elif data.data == 'true' and status == 3:
         speak_robot(search_name + ", we have reached your destination!")
