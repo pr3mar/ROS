@@ -201,7 +201,7 @@ def stop(msg):
 if __name__ == '__main__':
 	try:
 		test = False
-		doROS = False
+		doROS = True
 		if test:
 			# solely for testing purposes:
 			goals = []
@@ -339,7 +339,7 @@ if __name__ == '__main__':
 				rospy.Subscriber("/cancel", String, cancel)
 				rospy.Subscriber("/search/street", String, searchStreets)
 				rospy.Subscriber("/goto/pose", Pose, gotoPose)
-				rospy.Subscriber("/goto/street", Pose, gotoStreet)
+				rospy.Subscriber("/goto/street", String, gotoStreet)
 				rospy.Subscriber("/sign/slow", String, slow)
 				rospy.Subscriber("/sign/stop", String, stop)
 				rospy.Subscriber("/sign/honk", String, honk)
