@@ -65,7 +65,7 @@ def cancel(msg):
 # just a wrapper:
 # send goals to the robot, given a list of node ids
 def send(goals):
-	global setGoal, globGoals, canceled, reached, alib, preset
+	global setGoal, globGoals, canceled, reached, alib, preset, graph
 	if(alib == None):
 		rospy.loginfo("WTF? Actionlib is None, send(goals)")
 		return
@@ -113,14 +113,14 @@ def send(goals):
 
 #localize by current position of rooomba
 def localizeRoomba(poseWithCov): # get data from /amcl_pose
-	global setGoal, currentLocation
+	global setGoal, currentLocation, graph
 	nearest_node = graph.localize(poseWithCov.pose.pose)
 	currentLocation = nearest_node[0]
 	#print "location = ", nearest_node[0], nearest_node[1]
 
 # search on street X
 def searchStreets(street):
-	global currentLocation, colorMap, canceled, currentGoal
+	global currentLocation, colorMap, canceled, currentGoal, graph
 	# canceled = False
 	print "going to explore street:", street.data, colorMap[street.data]
 	if street.data in colorMap:
@@ -133,7 +133,7 @@ def searchStreets(street):
 
 # search on street X
 def gotoStreet(street):
-	global currentLocation, colorMap, canceled, currentGoal
+	global currentLocation, colorMap, canceled, currentGoal, graph
 	# canceled = False
 	print "going to street:", street.data, colorMap[street.data]
 	if street.data in colorMap:
@@ -146,7 +146,7 @@ def gotoStreet(street):
 
 # go to a specific position (where a face is located)
 def gotoPose(pose):
-	global currentLocation, canceled, preset
+	global currentLocation, canceled, preset, graph
 	# canceled = False
 	print "going to a predefined position"
 	nearest_goal_position = graph.localize(pose)
@@ -162,7 +162,7 @@ def gotoPose(pose):
 # find the nearest node and remove the edge
 # only works if the nearest nodes are from the predefined global poses_to_remove
 def removeEdges(pose):
-	global poses_to_remove, currentGoal, alib, cancel_pub
+	global poses_to_remove, currentGoal, alib, cancel_pub, graph
 	nearest_node = graph.localize(pose)
 	removedNow = False
 	for edge in poses_to_remove:
@@ -172,9 +172,10 @@ def removeEdges(pose):
 			if(nearest_node[0].id == el[0][0] or nearest_node[0].id == el[0][1]):
 				removedNow = graph.removeEdge(el[0])
 				el[1] = True
-				print "removing edges!"
+				print "removing edges!\n", 
+				#graph.printGraph()
 	if removedNow and currentGoal != None:
-		print "changing the plan!"
+		print "changing the plan!", currentGoal
 		goal = GoalID()
 		cancel_pub.publish(goal)
 		time = rospy.get_time() + rospy.Duration(1.0).to_sec()
