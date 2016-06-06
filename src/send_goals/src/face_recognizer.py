@@ -190,7 +190,7 @@ def detection_thresh(points):
 
 def sign_detection(points):
     #the same as for the face detection
-    global detect_sign_true, det_signs, sign_detected, det_entry_sign, signs_count, det, sign_detected_again, sign_detected_again_count, sign_pose, max_sign_name, max_sign_count
+    global detect_sign_true, det_signs, sign_detected, det_entry_sign, signs_count, det, sign_detected_again
 
     for newPoint in points.markers:
         position = newPoint.pose.position
@@ -210,19 +210,22 @@ def sign_detection(points):
             if dist_x <= mind and dist_y <= mind and dist_z <= mind:
                 if not det[key]['detected']:
                     min_point = det[key]
-                    sign_detected_again_count = 0
                 else:
-                    # we already have that point detected, lets count if it's really that point
-                    min_point = "not"
-                    sign_detected_again_count += 1
-                    if sign_detected_again_count == 15:
-                        sign_pose = newPoint.pose
-                        sign_detected_again = 1
-                        for key1 in signs_count:            #reset to zero
-                            signs_count[key1]['count'] = 0
-
-            else:
-                sign_detected_again_count = 0                
+                    if sign_detected_again == 0:
+                        sign_detected_again = 1     #need to reset that somewhere!!!
+                        # we already have that point detected, lets count if it's really that point
+                        min_point = "not"
+                        print "we already have that sign, but we see it again!: ", det[key]['name']
+                        name = det[key]['name']
+                        if name == 'honk':
+                            #honk_pub.publish("true")
+                            speak_robot("Beeeeeeeeeeeeeeeeeeeeep! Bip bip!")
+                        elif name =='stop':
+                            stop_pub.publish("true")
+                        elif name =='limit':   
+                            slow_pub.publish("true")  
+                        elif name =='oneway':  
+                            oneway_pub.publish(newPoint.pose)   #this is probably wrong -> not necessarily the same frame?
 
 
         if min_point == None:
@@ -271,11 +274,8 @@ def recognized_sign(data):
                 detect_sign_true = 0
                 det_entry_sign['name'] = max_sign_name
                 print "adding name to the dictionary!: ", det_entry_sign['name'], det_entry_sign['point']
-            
-            elif sign_detected_again == 1:
-                sign_detected_again = 0
+        
                 # we publish to the appropriate topic
-                print "we already have that sign, but we see it again!: ", max_sign_name
                 if max_sign_name == 'honk':
                     #honk_pub.publish("true")
                     speak_robot("Beeeeeeeeeeeeeeeeeeeeep! Bip bip!")
@@ -438,14 +438,17 @@ def goal_reached(data):
     if data.data == 'true' and status == 1:
         status = 2
         speak_robot(search_name + ", where would you like to go?")
+        print search_name, " where would you like to go?"
         status = 3
 
     elif data.data == 'false' and status == 1:
         speak_robot("Dispatcher, you said "+search_name+" is waiting on the "+colour_street + " street, right?")
+        print search_name, colour_street, " Where is he?"
         status = -1    
 
     elif data.data == 'true' and status == 3:
         speak_robot(search_name + ", we have reached your destination!")
+        print search_name, " we have reached your destination!"
         status = 4
 
 
