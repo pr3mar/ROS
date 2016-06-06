@@ -25,6 +25,7 @@ honk_pub = None
 oneway_pub = None
 det = {}
 search_name = None
+person_name = None
 sent_street = 0
 colour_street = None
 alib = None
@@ -432,24 +433,25 @@ def publish_faces(non):
         
 
 def goal_reached(data):
-    global status, search_name
+    global status, search_name, person_name
 
     print "face reached!"
     #when we have the position, but looking for the rotation (TO-DO: wait for the detection first)
     if data.data == 'true' and status == 1:
         status = 2
-        speak_robot(search_name + ", where would you like to go?")
-        print search_name, " where would you like to go?"
+        person_name = search_name
+        speak_robot(person_name + ", where would you like to go?")
+        print person_name, " where would you like to go?"
         status = 3
 
     elif data.data == 'false' and status == 1:
-        speak_robot("Dispatcher, you said "+search_name+" is waiting on the "+colour_street + " street, right?")
-        print search_name, colour_street, " Where is he?"
+        speak_robot("Dispatcher, you said "+person_name+" is waiting on the "+colour_street + " street, right?")
+        print person_name, colour_street, " Where is he?"
         status = -1    
 
     elif data.data == 'true' and status == 3:
-        speak_robot(search_name + ", we have reached your destination!")
-        print search_name, " we have reached your destination!"
+        speak_robot(person_name + ", we have reached your destination!")
+        print person_name, " we have reached your destination!"
         status = 4
 
 
