@@ -369,12 +369,12 @@ def publish_faces(non):
 
         name = det[key]['name']
         marker = det[key]['marker']
-        print "coloring marker: ", name, color_map[name]
+        #print "coloring marker: ", name, color_map[name]
         if name in color_map:
-            print "custom color"
+            #print "custom color"
             marker.color = color_map[name]
         else:
-            print "default color"
+            #print "default color"
             marker.color = ColorRGBA(0, 0, 0, 1)
 
         markers.append(marker)
