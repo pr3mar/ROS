@@ -13,7 +13,7 @@ from tf.transformations import quaternion_from_euler
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal, MoveBaseActionGoal
 from actionlib_msgs.msg import GoalStatusArray
 from geometry_msgs.msg import *
-from actionlib_msgs.msg import GoalStatus
+from actionlib_msgs.msg import GoalStatus, GoalID
 
 colorMap = {"red":0, "yellow":1, "blue":2, "green":3}
 goals = []
