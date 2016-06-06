@@ -212,10 +212,10 @@ def sign_detection(points):
                 if not det[key]['detected']:
                     min_point = det[key]
                 else:
+                    min_point = "not"
                     if sign_detected_again == 0:
                         sign_detected_again = 1     #need to reset that somewhere!!!
                         # we already have that point detected, lets count if it's really that point
-                        min_point = "not"
                         print "we already have that sign, but we see it again!: ", det[key]['name']
                         name = det[key]['name']
                         if name == 'honk':
@@ -230,6 +230,7 @@ def sign_detection(points):
 
 
         if min_point == None:
+            sign_detected_again = 0
             max_sign_name = None
             max_sign_count = 0                  #reset max counter
             for key1 in signs_count:            #reset to zero
@@ -272,7 +273,7 @@ def recognized_sign(data):
 
         if max_sign_count > thresh:
             if detect_sign_true == 1 and det_entry_sign['name'] == None:
-                detect_sign_true = 0
+                #detect_sign_true = 0
                 det_entry_sign['name'] = max_sign_name
                 print "adding name to the dictionary!: ", det_entry_sign['name'], det_entry_sign['point']
         
