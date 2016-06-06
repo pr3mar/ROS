@@ -373,6 +373,9 @@ def publish_faces(non):
         if name in color_map:
             #print "custom color"
             marker.color = color_map[name]
+            marker.color.r = marker.color.r / 255
+            marker.color.g = marker.color.g / 255
+            marker.color.b = marker.color.b / 255
         else:
             #print "default color"
             marker.color = ColorRGBA(0, 0, 0, 1)
