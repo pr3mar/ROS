@@ -435,6 +435,10 @@ def goal_reached(data):
         speak_robot(search_name + ", where would you like to go?")
         status = 3
 
+    elif data.data == 'true' and status == 3:
+        speak_robot(search_name + ", we have reached your destination!")
+        status = 4
+
 
 def face_recognizer():
     global markers_pub, voice_pub, cancel_pub, street_pub, goto_pub, slow_pub, stop_pub, honk_pub, oneway_pub, alib, goto_street_pub
