@@ -336,7 +336,7 @@ def voice_action(data):
                 continue
 
             name = det[key]['name']
-
+            marker = det[key]['marker']
             #lets check if we already have the face we are looking for (status = 0 means we are looking for a face)
             if search_name != None:
                 #print "We have a search name and status is 0."
@@ -344,6 +344,7 @@ def voice_action(data):
                     sent_street = 1     #we don't have to send street color, if we know where the face is
                     status = 1
                     just_sent = 1
+                    send_pose = marker.pose
                     print "Name we are looking for is the same as the name in our dict. Sending directions. name we are looking for: ", search_name, "Name in our dict: ", name 
                     goal = GoalID()
                     cancel_pub.publish(goal)
