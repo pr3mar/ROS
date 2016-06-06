@@ -213,7 +213,7 @@ def sign_detection(points):
                     min_point = det[key]
                 else:
                     min_point = "not"
-                    if sign_detected_again == 0:
+                    if sign_detected_again == 0 and det[key]['name'] != None:
                         sign_detected_again = 1     
                         # we already have that point detected, lets count if it's really that point
                         print "we already have that sign, but we see it again!: ", det[key]['name']
