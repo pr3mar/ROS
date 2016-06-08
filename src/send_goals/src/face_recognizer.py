@@ -264,14 +264,18 @@ def recognized_sign(data):
     name = name[1]
 
     for key in det:
-        if sign_stamp in det[key]['stamps']:
-            for i in det[key]['stamps']:
-                for key1 in i:
-                    if key1 == sign_stamp:
-                        i[key1] = name
+        for i in det[key]['stamps']:
+            for key1 in i:
+                if key1 == sign_stamp:
+                    i[key1] = name
 
+        # we chack if all detections are recognized
+        for ob in det[key]['stamps']:
+            for key3 in ob:
+                if ob[key3] == None:
+                    all_signs_recognized = False
 
-        if det[key]['detected']:
+        if all_signs_recognized:            
             for i in det[key]['stamps']:
                 for key2 in i:
                     name = i[key2]
