@@ -197,7 +197,7 @@ void recognize(const detection_msgs::DetectionConstPtr &det) {
 		cout << "final: " << minVal << " " << classes[maxID] << endl << endl;
 		std_msgs::String to_pub;
 		std::stringstream ss;
-    	ss << classes[maxID];
+    	ss << det -> header.stamp.sec << "." << det -> header.stamp.nsec << ";" << classes[maxID];
   	    to_pub.data = ss.str();
 		pub.publish(to_pub);
   }

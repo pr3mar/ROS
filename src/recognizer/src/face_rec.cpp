@@ -72,7 +72,7 @@ void recognize(const detection_msgs::DetectionConstPtr &det) {
       // ros::ROS_INFO("I recognized: " + classes[label]);
       std_msgs::String msg;
       stringstream ss;
-      ss << classes[label];
+      ss << det -> header.stamp.sec << "." << det -> header.stamp.nsec << ";" << classes[label];
       msg.data = ss.str();
       pub.publish(msg);
   }
