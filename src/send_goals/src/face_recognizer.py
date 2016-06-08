@@ -264,50 +264,51 @@ def recognized_sign(data):
     name = name[1]
 
     for key in det:
-        for i in det[key]['stamps']:
-            for key1 in i:
-                if key1 == sign_stamp:
-                    i[key1] = name
-
-        # we chack if all detections are recognized
-        for ob in det[key]['stamps']:
-            for key3 in ob:
-                if ob[key3] == None:
-                    all_signs_recognized = False
-
-        if all_signs_recognized:            
+        if det[key]['face'] == False
             for i in det[key]['stamps']:
-                for key2 in i:
-                    name = i[key2]
-                    # we count
-                    if name in signs_count:
-                        signs_count[name]['count'] += 1
-                        #print signs_count[name]['name']+": "+str(signs_count[name]['count'])
-                        if signs_count[name]['count'] > max_sign_count:
-                            max_sign_count = signs_count[name]['count']
-                            max_sign_name = name
+                for key1 in i:
+                    if key1 == sign_stamp:
+                        i[key1] = name
 
-                    else:
-                        signs_count[name] = {'count': 1, 'face': False, 'name': name}
+            # we chack if all detections are recognized
+            for ob in det[key]['stamps']:
+                for key3 in ob:
+                    if ob[key3] == None:
+                        all_signs_recognized = False
 
-            
-            det_entry_sign['name'] = max_sign_name
-            print "adding name to the dictionary!: ", det_entry_sign['name'], det_entry_sign['point']
-            
-            # we publish to the appropriate topic
+            if all_signs_recognized:            
+                for i in det[key]['stamps']:
+                    for key2 in i:
+                        name = i[key2]
+                        # we count
+                        if name in signs_count:
+                            signs_count[name]['count'] += 1
+                            #print signs_count[name]['name']+": "+str(signs_count[name]['count'])
+                            if signs_count[name]['count'] > max_sign_count:
+                                max_sign_count = signs_count[name]['count']
+                                max_sign_name = name
 
-            if max_sign_name == 'honk':
-                #honk_pub.publish("true")
-                speak_robot("Beeeeeeeeeeeeeeeeeeeeep! Bip bip!")
-            elif max_sign_name =='stop':
-                stop_pub.publish("true")
-            elif max_sign_name =='limit':   
-                slow_pub.publish("true")  
-            elif max_sign_name =='oneway':  
-                oneway_pub.publish(det_entry_sign['marker'].pose)
+                        else:
+                            signs_count[name] = {'count': 1, 'face': False, 'name': name}
 
-            for key1 in signs_count:            #reset to zero
-                    signs_count[key1]['count'] = 0
+                
+                det_entry_sign['name'] = max_sign_name
+                print "adding name to the dictionary!: ", det_entry_sign['name'], det_entry_sign['point']
+                
+                # we publish to the appropriate topic
+
+                if max_sign_name == 'honk':
+                    #honk_pub.publish("true")
+                    speak_robot("Beeeeeeeeeeeeeeeeeeeeep! Bip bip!")
+                elif max_sign_name =='stop':
+                    stop_pub.publish("true")
+                elif max_sign_name =='limit':   
+                    slow_pub.publish("true")  
+                elif max_sign_name =='oneway':  
+                    oneway_pub.publish(det_entry_sign['marker'].pose)
+
+                for key4 in signs_count:            #reset to zero
+                        signs_count[key4]['count'] = 0
     
 def voice_action(data):
     global search_name, colour_street, street_pub, sent_street, status, cancel_pub, det
