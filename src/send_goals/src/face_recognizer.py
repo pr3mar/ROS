@@ -110,6 +110,7 @@ def recognized_face(data):
     global markers_pub, detect_true, color, det_entry, faces_count, face_marker, search_name, status, cancel_pub, voice_pub, alib, max_face_name, max_face_count
 
     name = data.data
+    
     #print name
 
     #when we have the position, but looking for the rotation
@@ -196,6 +197,7 @@ def sign_detection(points):
 
     for newPoint in points.markers:
         position = newPoint.pose.position
+        stamp = str(newPoint.header.stamp.secs)+"."+str(newPoint.header.stamp.nsecs)
         xp = round(position.x, 2)
         yp = round(position.y, 2)
         zp = round(position.z, 2)
@@ -231,16 +233,12 @@ def sign_detection(points):
 
 
         if min_point == None:
-            sign_detected_again = 0             #not okay!
-            max_sign_name = None
-            max_sign_count = 0                  #reset max counter
-            for key1 in signs_count:            #reset to zero
-                    signs_count[key1]['count'] = 0
-
             detect_sign_true = 0     #when we detect new sign, we dont want recognizer to work immediately, but wait for this to become 1 (which means: sign detected!!)
-            det[str(xp) + ";" + str(yp) + ";" + str(zp)] = {'count': 1, 'detected': False, 'name': None, 'marker': None, 'face': False, 'point': str(xp) + ";" + str(yp) + ";" + str(zp)}
+            stamp_list = [{stamp:None}]
+            det[str(xp) + ";" + str(yp) + ";" + str(zp)] = {'count': 1, 'detected': False, 'name': None, 'marker': None, 'face': False, 'point': str(xp) + ";" + str(yp) + ";" + str(zp), 'stamps': stamp_list}
         elif min_point != "not":
             min_point['count'] += 1
+            min_point['stamps'].append({stamp:None})
             if min_point['count'] > 15:
                 min_point['detected'] = True
                 min_point['marker'] = newPoint      #we save the last marker
@@ -261,39 +259,51 @@ def recognized_sign(data):
 
     name = data.data
     #print name
+    name.split(";")
+    sign_stamp = name[0]
+    name = name[1]
 
-    thresh = 7
-    thresh_reached = False
-    
-    if name in  signs_count:
-        signs_count[name]['count'] += 1
-        #print signs_count[name]['name']+": "+str(signs_count[name]['count'])
-        if signs_count[name]['count'] > max_sign_count:
-            max_sign_count = signs_count[name]['count']
-            max_sign_name = name
+    for key in det:
+        if sign_stamp in det[key]['stamps']:
+            for i in det[key]['stamps']:
+                for key1 in i:
+                    if key1 == sign_stamp:
+                        i[key1] = name
 
-        if max_sign_count > thresh:
-            if detect_sign_true == 1 and det_entry_sign['name'] == None:
-                #detect_sign_true = 0
-                sign_detected_again = 1
-                det_entry_sign['name'] = max_sign_name
-                print "adding name to the dictionary!: ", det_entry_sign['name'], det_entry_sign['point']
-        
-                # we publish to the appropriate topic
 
-                if max_sign_name == 'honk':
-                    #honk_pub.publish("true")
-                    speak_robot("Beeeeeeeeeeeeeeeeeeeeep! Bip bip!")
-                elif max_sign_name =='stop':
-                    stop_pub.publish("true")
-                elif max_sign_name =='limit':   
-                    slow_pub.publish("true")  
-                elif max_sign_name =='oneway':  
-                    oneway_pub.publish(det_entry_sign['marker'].pose)
+        if det[key]['detected']:
+            for i in det[key]['stamps']:
+                for key2 in i:
+                    name = i[key2]
+                    # we count
+                    if name in signs_count:
+                        signs_count[name]['count'] += 1
+                        #print signs_count[name]['name']+": "+str(signs_count[name]['count'])
+                        if signs_count[name]['count'] > max_sign_count:
+                            max_sign_count = signs_count[name]['count']
+                            max_sign_name = name
 
-    else:
-        signs_count[name] = {'count': 1, 'face': False, 'name': name}
+                    else:
+                        signs_count[name] = {'count': 1, 'face': False, 'name': name}
 
+            
+            det_entry_sign['name'] = max_sign_name
+            print "adding name to the dictionary!: ", det_entry_sign['name'], det_entry_sign['point']
+            
+            # we publish to the appropriate topic
+
+            if max_sign_name == 'honk':
+                #honk_pub.publish("true")
+                speak_robot("Beeeeeeeeeeeeeeeeeeeeep! Bip bip!")
+            elif max_sign_name =='stop':
+                stop_pub.publish("true")
+            elif max_sign_name =='limit':   
+                slow_pub.publish("true")  
+            elif max_sign_name =='oneway':  
+                oneway_pub.publish(det_entry_sign['marker'].pose)
+
+            for key1 in signs_count:            #reset to zero
+                    signs_count[key1]['count'] = 0
     
 def voice_action(data):
     global search_name, colour_street, street_pub, sent_street, status, cancel_pub, det
