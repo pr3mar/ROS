@@ -125,7 +125,7 @@ def recognized_face(data):
     
     if name in faces_count:
         faces_count[name]['count'] += 1
-        #print faces_count[name]['name']+": "+str(faces_count[name]['count'])
+        print faces_count[name]['name']+": "+str(faces_count[name]['count'])
 
         if faces_count[name]['count'] > max_face_count:
             max_face_count = faces_count[name]['count']
@@ -149,7 +149,7 @@ def detection_thresh(points):
         zp = round(position.z, 2)
         mind = 0.5
         min_point = None
-        if zp > 1:
+        if zp > 0.6:
             print "false face: ", xp, yp, zp
             continue
         for key in det:
@@ -166,6 +166,7 @@ def detection_thresh(points):
         if min_point == None:
             max_face_name = None
             max_face_count = 0                  #reset max counter
+            print "Resetting faces count!"
             for key1 in faces_count:            #reset to zero before recognizer starts counting votes for new point in det
                 faces_count[key1]['count'] = 0
 
@@ -200,7 +201,7 @@ def sign_detection(points):
         zp = round(position.z, 2)
         mind = 0.5
         min_point = None
-        if zp > 1:
+        if zp > 0.6:
             print "false sign: ", xp, yp, zp
             continue
         for key in det:
