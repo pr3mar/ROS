@@ -224,8 +224,8 @@ def stop(msg):
 	print "going to stop!!", msg
 	if msg.data == "true":
 		print "stop sign!!"
-		reconf.update_configuration({"max_vel_x": 0.0})
-		reconf.update_configuration({"max_rot_vel": 0.0})
+		reconf.update_configuration({"max_vel_x": 0.001})
+		reconf.update_configuration({"max_rot_vel": 0.001})
 		time = rospy.get_time() + rospy.Duration(2.0).to_sec()
 		while(time > rospy.get_time()):
 			pass
@@ -277,10 +277,10 @@ if __name__ == '__main__':
 				7.15, 7.05, 6.99,\
 
 				#blue street
-				6.15, 5.17, 4.13, 3.04, 2.10, \
-
+				6.15, 5.17, 4.13, 3.04, 2.10, 2.19, \
+				
 				#green street
-				2.19, 2.11, 3.09, 4.10, 4.04, 5.34, 6.22
+				2.11, 3.09, 4.10, 4.04, 5.34, 6.22
 			]
 			y_coords = [ \
 				#red street
@@ -290,10 +290,10 @@ if __name__ == '__main__':
 				-0.07, 0.70, 1.5,\
 
 				#blue street
-				1.36, 1.18, 0.99, 0.99, 0.97, \
+				1.36, 1.18, 0.99, 0.99, 0.97, 0.26, \
 
 				#green street
-				0.26, -0.63, -0.59, -0.43, 0.32, -0.17, -0.11
+				-0.63, -0.59, -0.43, 0.32, -0.17, -0.11
 			]
 			colors = [ \
 				#red street
@@ -303,10 +303,10 @@ if __name__ == '__main__':
 				1, 1, 1,\
 
 				#blue street
-				2, 2, 2, 2, 2, \
+				2, 2, 2, 2, 2, 2, \
 
 				#green street
-				3, 3, 3, 3, 3, 3, 3
+				3, 3, 3, 3, 3, 3
 			]
 			goals = []
 			for i in range(len(x_coords)):
@@ -363,7 +363,7 @@ if __name__ == '__main__':
 				reconf = dynamic_reconfigure.client.Client("/move_base/DWAPlannerROS")
 				reached = rospy.Publisher("/goal_reached", String, queue_size=100)
 				cancel_pub = rospy.Publisher('/move_base/cancel', GoalID, queue_size=100)
-				reconf.update_configuration({"max_vel_x": 0.4})
+				reconf.update_configuration({"max_vel_x": 0.3})
 				reconf.update_configuration({"max_rot_vel": 1.5})
 				reconf.update_configuration({"xy_goal_tolerance": 0.25})
 				reconf.update_configuration({"yaw_goal_tolerance": 0.5})
