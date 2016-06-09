@@ -3,7 +3,7 @@ import roslib
 roslib.load_manifest('opencv_detector')
 roslib.load_manifest('localizer')
 import rospy
-import sys, select, termios, tty
+import sys, select, termios, tty, tf
 import time
 import Image
 import os
@@ -21,7 +21,7 @@ from sensor_msgs.msg import Image
 from localizer.srv import Localize
 from sensor_msgs.msg import CameraInfo
 from image_geometry import PinholeCameraModel
-from geometry_msgs.msg import Point, Vector3
+from geometry_msgs.msg import Point, Vector3, PoseStamped
 
 CV_WINDOW_TITLE = "OpenCV object detection"
 
@@ -131,7 +131,25 @@ class Detector():
                         
                         if not localization:
                             message.label = "napaka localization!"
-                        else:  
+                        else:
+                            #we transform the point
+                            tmpPose = PoseStamped()
+                            tmpPose.header = message.header
+                            tmpPose.pose = localization.pose
+                            try:
+                                self.listener.waitForTransform(message.header.frame_id, '/map', message.header.stamp, rospy.Duration(4.5))
+                                ret = self.listener.transformPose('/map', tmpPose)
+                            except tf.LookupException:
+                                print "lookup"
+                                continue
+                            except tf.ConnectivityException:
+                                print "conn"
+                                continue
+                            except tf.ExtrapolationException:
+                                print "extrapolation"
+                                continue
+                            localization.pose = ret.pose
+                          
                             message.label = str(localization.pose.position.x)+";"+str(localization.pose.position.y)+";"+str(localization.pose.position.z)
                     
                 self.message_counter += 1
@@ -147,7 +165,6 @@ class Detector():
     def __init__(self):
         # Get the ~private namespace parameters from command line or launch file
         # Set basic paramateres
-        self.buffer_size = rospy.get_param('~camera_buffer_size', 50)
         self.region_scope = rospy.get_param('~region', 3)
         self.image_scale = rospy.get_param('~scale', None)
         self.throttle = rospy.get_param('~throttle', 10)
@@ -171,6 +188,7 @@ class Detector():
         self.image_sub = rospy.Subscriber('camera', Image, self.image_callback, queue_size=1)
         
         #localization
+        self.listener = tf.TransformListener()
         self.localize = rospy.ServiceProxy('localizer/localize', Localize)
 
         # Subscribers and publishers
