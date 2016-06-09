@@ -8,6 +8,8 @@ import time
 import Image
 import os
 import cv2, cv, numpy
+import message_filters
+import collections
 from std_msgs.msg import String
 from std_msgs.msg import Bool
 import sensor_msgs.msg
@@ -100,35 +102,36 @@ class Detector():
                     
                     #adding location
                     u = message.x + message.width / 2
-					v = message.y + message.height / 2
-
-					camera_info = None
-					best_time = 100
-					for ci in self.camera_infos:
-						time = abs(ci.header.stamp.to_sec() - message.header.stamp.to_sec())
-						if time < best_time:
-						    camera_info = ci
-						    best_time = time
-
-					if not camera_info or best_time > 1:
-						return
-
-					camera_model = PinholeCameraModel()
-					camera_model.fromCameraInfo(camera_info)
-
-					point = Point(((u - camera_model.cx()) - camera_model.Tx()) / camera_model.fx(),
-						 ((v - camera_model.cy()) - camera_model.Ty()) / camera_model.fy(), 1)
-
-					localization = self.localize(detection.header, point, self.region_scope)
-
-					if not localization:
-						return
-
-                    message.pose = str(localization.pose.position.x)+";"+str(localization.pose.position.y)+";"+str(localization.pose.position.z)
-
+                    v = message.y + message.height / 2
+                    
+                    camera_info = None
+                    best_time = 10000000000
+                    for ci in self.camera_infos:
+                        rospy.loginfo("in camera_infos loop!")
+                        time = abs(ci.header.stamp.to_sec() - message.header.stamp.to_sec())
+                        if time < best_time:
+                            rospy.loginfo("Setting camera_info!")
+                            camera_info = ci
+                            best_time = time
+                            
+                    if not camera_info:
+                        message.label = "napaka!"
+                    else:    
+                        camera_model = PinholeCameraModel()
+                        camera_model.fromCameraInfo(camera_info)
+                        
+                        point = Point(((u - camera_model.cx()) - camera_model.Tx()) / camera_model.fx(), ((v - camera_model.cy()) - camera_model.Ty()) / camera_model.fy(), 1)
+                        
+                        localization = self.localize(detection.header, point, self.region_scope)
+                        
+                        if not localization:
+                            message.label = "napaka localization!"
+                        else:  
+                            message.label = str(localization.pose.position.x)+";"+str(localization.pose.position.y)+";"+str(localization.pose.position.z)
+                    
                 self.message_counter += 1
                 self.detections_pub.publish(message)
-            
+                
             if self.cv_window:
                 cv2.imshow(CV_WINDOW_TITLE, cv_image)
                 cv2.waitKey(1)
@@ -139,6 +142,7 @@ class Detector():
     def __init__(self):
         # Get the ~private namespace parameters from command line or launch file
         # Set basic paramateres
+        self.buffer_size = rospy.get_param('~camera_buffer_size', 50)
         self.region_scope = rospy.get_param('~region', 3)
         self.image_scale = rospy.get_param('~scale', None)
         self.throttle = rospy.get_param('~throttle', 10)
@@ -147,6 +151,7 @@ class Detector():
         if not data_path:
             sys.exit(1)        
 
+        self.camera_infos = collections.deque(maxlen = self.buffer_size)
         self.throttle = None if self.throttle <= 0 else (1 / float(self.throttle))
 
         self.detectorCascade = cv2.CascadeClassifier(data_path)
