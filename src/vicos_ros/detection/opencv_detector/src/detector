@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import roslib
 roslib.load_manifest('opencv_detector')
+roslib.load_manifest('localizer')
 import rospy
 import sys, select, termios, tty
 import time
@@ -14,6 +15,11 @@ from dynamic_reconfigure.server import Server as DynamicReconfigureServer
 from detection_msgs.msg import Detection
 from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import Image
+
+from localizer.srv import Localize
+from sensor_msgs.msg import CameraInfo
+from image_geometry import PinholeCameraModel
+from geometry_msgs.msg import Point, Vector3
 
 CV_WINDOW_TITLE = "OpenCV object detection"
 
@@ -62,6 +68,9 @@ class Detector():
         else:
             rospy.loginfo("Object detection disabled")
           
+    def camera_callback(self, camera_info):
+        self.camera_infos.append(camera_info)
+    
     def image_callback(self, data):
         if not self.enabled:
             return
@@ -88,6 +97,34 @@ class Detector():
                     message.source = 'opencv'
                     message.confidence = 1
                     message.image = self.bridge.cv2_to_imgmsg(detection[4], "bgr8")
+                    
+                    #adding location
+                    u = message.x + message.width / 2
+					v = message.y + message.height / 2
+
+					camera_info = None
+					best_time = 100
+					for ci in self.camera_infos:
+						time = abs(ci.header.stamp.to_sec() - message.header.stamp.to_sec())
+						if time < best_time:
+						    camera_info = ci
+						    best_time = time
+
+					if not camera_info or best_time > 1:
+						return
+
+					camera_model = PinholeCameraModel()
+					camera_model.fromCameraInfo(camera_info)
+
+					point = Point(((u - camera_model.cx()) - camera_model.Tx()) / camera_model.fx(),
+						 ((v - camera_model.cy()) - camera_model.Ty()) / camera_model.fy(), 1)
+
+					localization = self.localize(detection.header, point, self.region_scope)
+
+					if not localization:
+						return
+
+                    message.pose = str(localization.pose.position.x)+";"+str(localization.pose.position.y)+";"+str(localization.pose.position.z)
 
                 self.message_counter += 1
                 self.detections_pub.publish(message)
@@ -102,9 +139,11 @@ class Detector():
     def __init__(self):
         # Get the ~private namespace parameters from command line or launch file
         # Set basic paramateres
+        self.region_scope = rospy.get_param('~region', 3)
         self.image_scale = rospy.get_param('~scale', None)
         self.throttle = rospy.get_param('~throttle', 10)
         data_path = rospy.get_param('~detector_file', '')
+        rospy.wait_for_service('localizer/localize')
         if not data_path:
             sys.exit(1)        
 
@@ -116,6 +155,11 @@ class Detector():
         # init camera capture stuff
         self.bridge = CvBridge()
         self.image_sub = rospy.Subscriber('camera', Image, self.image_callback, queue_size=1)
+        
+        #localization
+        self.camera_sub = message_filters.Subscriber('camera_info', CameraInfo)
+        self.camera_sub.registerCallback(self.camera_callback)
+        self.localize = rospy.ServiceProxy('localizer/localize', Localize)
 
         # Subscribers and publishers
         self.detections_pub = rospy.Publisher('detections', Detection, queue_size=10)

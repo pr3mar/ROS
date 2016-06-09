@@ -7,3 +7,4 @@ string source
 string label
 float32 confidence
 sensor_msgs/Image image
+string pose
