@@ -72,6 +72,10 @@ class Detector():
           
     def camera_callback(self, camera_info):
         self.camera_infos.append(camera_info)
+        #rospy.loginfo("Velikost: "+str(len(self.camera_infos)))
+        if len(self.camera_infos) > 50:
+            del self.camera_infos[0]
+            
     
     def image_callback(self, data):
         if not self.enabled:
@@ -105,14 +109,15 @@ class Detector():
                     v = message.y + message.height / 2
                     
                     camera_info = None
-                    best_time = 100
+                    best_time = 1
                     for ci in self.camera_infos:
-                        rospy.loginfo("in camera_infos loop!")
+                        #rospy.loginfo("in camera_infos loop!")
                         time = abs(ci.header.stamp.to_sec() - message.header.stamp.to_sec())
                         if time < best_time:
-                            rospy.loginfo("Setting camera_info!")
+                            #rospy.loginfo("Setting camera_info!")
                             camera_info = ci
                             best_time = time
+                            break
                             
                     if not camera_info:
                         message.label = "napaka!"
@@ -122,7 +127,7 @@ class Detector():
                         
                         point = Point(((u - camera_model.cx()) - camera_model.Tx()) / camera_model.fx(), ((v - camera_model.cy()) - camera_model.Ty()) / camera_model.fy(), 1)
                         
-                        localization = self.localize(detection.header, point, self.region_scope)
+                        localization = self.localize(message.header, point, self.region_scope)
                         
                         if not localization:
                             message.label = "napaka localization!"
@@ -147,11 +152,15 @@ class Detector():
         self.image_scale = rospy.get_param('~scale', None)
         self.throttle = rospy.get_param('~throttle', 10)
         data_path = rospy.get_param('~detector_file', '')
+        self.buffer_size = rospy.get_param('~camera_buffer_size', 100)
         rospy.wait_for_service('localizer/localize')
+        self.camera_infos = []
+        self.camera_sub = message_filters.Subscriber('/camera/rgb/camera_info', CameraInfo)
+        self.camera_sub.registerCallback(self.camera_callback)
         if not data_path:
             sys.exit(1)        
 
-        self.camera_infos = collections.deque(maxlen = self.buffer_size)
+        
         self.throttle = None if self.throttle <= 0 else (1 / float(self.throttle))
 
         self.detectorCascade = cv2.CascadeClassifier(data_path)
@@ -162,8 +171,6 @@ class Detector():
         self.image_sub = rospy.Subscriber('camera', Image, self.image_callback, queue_size=1)
         
         #localization
-        self.camera_sub = message_filters.Subscriber('camera_rgb_info', CameraInfo)
-        self.camera_sub.registerCallback(self.camera_callback)
         self.localize = rospy.ServiceProxy('localizer/localize', Localize)
 
         # Subscribers and publishers
@@ -182,5 +189,5 @@ if __name__ == '__main__':
         rospy.init_node('opencv_detector')
         try:
             fd = Detector()
-            rospy.spin()    
+            rospy.spin()
         except rospy.ROSInterruptException: pass
