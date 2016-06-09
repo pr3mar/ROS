@@ -42,6 +42,7 @@ max_face_count = 0
 #signs
 max_sign_count = 0
 max_sign_name = None
+thresh_sign_count = 0
 det_signs = {}
 sign_detected = 0
 sign_detected_again = 0
@@ -235,11 +236,11 @@ def sign_detection(points):
         if min_point == None:
             detect_sign_true = 0     #when we detect new sign, we dont want recognizer to work immediately, but wait for this to become 1 (which means: sign detected!!)
             stamp_list = [{stamp:None}]
-            det[str(xp) + ";" + str(yp) + ";" + str(zp)] = {'count': 1, 'detected': False, 'name': None, 'marker': None, 'face': False, 'point': str(xp) + ";" + str(yp) + ";" + str(zp), 'stamps': stamp_list}
+            det[str(xp) + ";" + str(yp) + ";" + str(zp)] = {'count': 1, 'count_recognition': 0, 'detected': False, 'name': None, 'marker': None, 'face': False, 'point': str(xp) + ";" + str(yp) + ";" + str(zp), 'stamps': stamp_list}
         elif min_point != "not":
             min_point['count'] += 1
             min_point['stamps'].append({stamp:None})
-            if min_point['count'] > 15:
+            if min_point['count'] > 30:
                 min_point['detected'] = True
                 min_point['marker'] = newPoint      #we save the last marker
                 sign_detected += 1
@@ -255,31 +256,40 @@ def sign_detection(points):
 
 
 def recognized_sign(data):
-    global signs_count, detect_sign_true, det_entry_sign, sign_detected_again, honk_pub, stop_pub, slow_pub, oneway_pub, sign_pose, max_sign_count, max_sign_name
+    global signs_count, detect_sign_true, det_entry_sign, sign_detected_again, honk_pub, stop_pub, slow_pub, oneway_pub, sign_pose, max_sign_count, max_sign_name, thresh_sign_count
 
     name = data.data
     #print name
-    name.split(";")
-    sign_stamp = name[0]
-    name = name[1]
+    sign_stamp, name = name.split(";")
+    #print "sign stamp, name", sign_stamp, name
+    
+    thresh = 7
 
     for key in det:
-        if det[key]['face'] == False
+        if det[key]['face'] == False and det[key]['name'] == None:
+            #print "its a sign!"
             for i in det[key]['stamps']:
                 for key1 in i:
+                    print "key1 and sign stamp: ", key1, sign_stamp
                     if key1 == sign_stamp:
                         i[key1] = name
+                        det[key]['count_recognition'] += 1
+                        print "We found the same stamp, adding name! Count: ", det[key]['count_recognition'] 
 
             # we chack if all detections are recognized
+            thresh_sign_count = 0
             for ob in det[key]['stamps']:
                 for key3 in ob:
-                    if ob[key3] == None:
-                        all_signs_recognized = False
+                    if ob[key3] != None:
+                        thresh_sign_count += 1
+                        #print "count: ", thresh_sign_count, key
 
-            if all_signs_recognized:            
+            if det[key]['count_recognition'] >= thresh:
+                print "Enough signs recognized, start with counting."          
                 for i in det[key]['stamps']:
                     for key2 in i:
                         name = i[key2]
+                        print "name", name
                         # we count
                         if name in signs_count:
                             signs_count[name]['count'] += 1
@@ -288,12 +298,12 @@ def recognized_sign(data):
                                 max_sign_count = signs_count[name]['count']
                                 max_sign_name = name
 
-                        else:
+                        elif name != None:
                             signs_count[name] = {'count': 1, 'face': False, 'name': name}
 
                 
-                det_entry_sign['name'] = max_sign_name
-                print "adding name to the dictionary!: ", det_entry_sign['name'], det_entry_sign['point']
+                det[key]['name'] = max_sign_name
+                print "adding name to the dictionary!: ", det[key]['name'], det[key]['point']
                 
                 # we publish to the appropriate topic
 
