@@ -12,6 +12,7 @@ from visualization_msgs.msg import Marker, MarkerArray
 from sound_play.msg import SoundRequest
 import tf
 
+# main status of app (which stage are we at at the moment)
 status = 0      # 0 = looking for the face, 1 = approaching the face, 2 = approached the face, 3 = waiting for the command from the face
 
 voice_pub = None
@@ -30,29 +31,15 @@ sent_street = 0
 colour_street = None
 alib = None
 
-#faces
-detected = 0
-detect_true = 0
-faces_count = {}
-color = None
-det_entry = None
-max_face_name = None
-max_face_count = 0
+# faces
+detected_faces = 0
 
-#signs
-max_sign_count = 0
-max_sign_name = None
-thresh_sign_count = 0
-det_signs = {}
-sign_detected = 0
-sign_detected_again = 0
-sign_detected_again_count = 0
-detect_sign_true = 0
-det_entry_sign = None
-signs_count = {}
-sign_pose = None
-color_map = {'honk': ColorRGBA(85, 96, 240, 1), 'left': ColorRGBA(16, 31, 239, 1), 'limit': ColorRGBA(249, 98, 98, 1), 'oneway': ColorRGBA(245, 1, 1, 1), 'stop': ColorRGBA(152, 6, 6, 1), 'peter': ColorRGBA(128, 255, 0, 1), 'tina': ColorRGBA(51, 51, 255, 1), 'harry': ColorRGBA(242, 208, 15, 1), 'forest': ColorRGBA(255, 128, 0, 1), 'filip': ColorRGBA(102, 51, 0, 1), 'kim': ColorRGBA(19, 237, 226, 1), 'mathew': ColorRGBA(203, 17, 240, 1), 'scarlett': ColorRGBA(111, 255, 0, 1), 'ellen': ColorRGBA(10, 107, 107, 1)}
+# signs
+detected_signs = 0
+
 # honk: light blue, left: dark blue, limit: pink, oneway: light red, stop: dark red, peter: light green, tina: dark green, harry: light orange,  forest: orange, filip: brown, kim: tirquoise, mathew: purple, scarlett: light green, ellen: dark green-blue 
+color_map = {'honk': ColorRGBA(85, 96, 240, 1), 'left': ColorRGBA(16, 31, 239, 1), 'limit': ColorRGBA(249, 98, 98, 1), 'oneway': ColorRGBA(245, 1, 1, 1), 'stop': ColorRGBA(152, 6, 6, 1), 'peter': ColorRGBA(128, 255, 0, 1), 'tina': ColorRGBA(51, 51, 255, 1), 'harry': ColorRGBA(242, 208, 15, 1), 'forest': ColorRGBA(255, 128, 0, 1), 'filip': ColorRGBA(102, 51, 0, 1), 'kim': ColorRGBA(19, 237, 226, 1), 'mathew': ColorRGBA(203, 17, 240, 1), 'scarlett': ColorRGBA(111, 255, 0, 1), 'ellen': ColorRGBA(10, 107, 107, 1)}
+
 
 def min_distance_all(tokens, find):
     name = None
@@ -73,7 +60,6 @@ def min_distance_all(tokens, find):
 
     #print "Name we are looking for: %s. It is similar to: %s"%(name, original)
     return  name, min_index
-
 
 
 def min_distance_one(original, find):
@@ -107,46 +93,9 @@ def speak_robot(str_speech):
     voice_pub.publish(tmp)
 
 
-def recognized_face(data):
-    global det, search_name, status, cancel_pub, alib
-    
-    thresh = 15
-    thresh_reached = False
-    rec = data.data
-    #print rec
-    
-    #when we have the position, but looking for the rotation
-    #if status == 2 and search_name == name:
-    #   goal = GoalID()
-    #    cancel_pub.publish(goal)
-    #    alib.cancel_goal()
-    #    speak_robot(search_name + ", where would you like to go?")
-    #    status = 3
-    
-    x, y, z, name = rec.split(';')
-    xp = round(float(x), 2)
-    yp = round(float(y), 2)
-    zp = round(float(z), 2)
-    mind = 0.5
-    for key in det:
-        (x, y, z) = key.split(';')
-        dist_x = abs(xp - float(x))
-        dist_y = abs(yp - float(y))
-        dist_z = abs(zp - float(z))
-        if dist_x <= mind and dist_y <= mind and dist_z <= mind:
-            #so we have a recognition that maches given position of a detection -> let's store the recognized name
-            det[key]['name_dict'][name] = det[key]['name_dict'].get(name, 1) + 1    #we increase a count, or if the key doesn't exist yet, get() allows us to set default value
-            #print name, "count:", det[key]['name_dict'][name]
-            if det[key]['name_dict'][name] > det[key]['max_recognition']:     #we check if it's bigger than current max
-                det[key]['max_recognition'] = det[key]['name_dict'][name]
-            if det[key]['name_dict'][name] > thresh and det[key]['name_dict'][name] == det[key]['max_recognition'] and det[key]['name'] != name :    #if we dont want the recognized name to be changed once set, add to IF: and det[key]['name'] == None 
-                #if count of a recognized name is now bigger than threshold, and is also the same as "max_recognition", which means its a max of all names, we save the name
-                det[key]['name'] = name
-                print "Adding name to the detection ", det[key]['point'], ": ", name
-    
 
 def face_detection(points):
-    global det
+    global det, detected_faces
 
     for newPoint in points.markers:
         position = newPoint.pose.position
@@ -177,20 +126,58 @@ def face_detection(points):
             if min_point['count'] > 10:
                 min_point['detected'] = True
                 min_point['marker'] = newPoint      #we save the last marker
-                print "face " + str(detected) + " detected!!!!\n", min_point['point']
+                print "face " + str(detected_faces) + " detected!!!!\n", min_point['point']
+                detected_faces += 1
                 #print det
-                
         else:
             pass
 
 
+def recognized_face(data):
+    global det, search_name, status, cancel_pub, alib
+    
+    thresh = 15
+    rec = data.data
+    #print rec
+    
+    #when we have the position, but looking for the rotation
+    #if status == 2 and search_name == name:
+    #   goal = GoalID()
+    #    cancel_pub.publish(goal)
+    #    alib.cancel_goal()
+    #    speak_robot(search_name + ", where would you like to go?")
+    #    status = 3
+    
+    x, y, z, name = rec.split(';')
+    xp = round(float(x), 2)
+    yp = round(float(y), 2)
+    zp = round(float(z), 2)
+    mind = 0.5
+    for key in det:
+        (x, y, z) = key.split(';')
+        dist_x = abs(xp - float(x))
+        dist_y = abs(yp - float(y))
+        dist_z = abs(zp - float(z))
+        if dist_x <= mind and dist_y <= mind and dist_z <= mind:
+            #so we have a recognition that maches given position of a detection -> let's store the recognized name
+            det[key]['name_dict'][name] = det[key]['name_dict'].get(name, 1) + 1    #we increase a count, or if the key doesn't exist yet, get() allows us to set default value
+            #print name, "count:", det[key]['name_dict'][name]
+            
+            if det[key]['name_dict'][name] > det[key]['max_recognition']:     #we check if current name count is bigger than max count of all names
+                det[key]['max_recognition'] = det[key]['name_dict'][name]
+            
+            if det[key]['name_dict'][name] > thresh and det[key]['name_dict'][name] == det[key]['max_recognition'] and det[key]['name'] != name :    #if we dont want the recognized name to be changed once set, add to IF: and det[key]['name'] == None 
+                #if count of a recognized name is now bigger than threshold, and is also the same as "max_recognition", which means its a max of all names, we save the name
+                det[key]['name'] = name
+                print "Adding name to the face detection ", det[key]['point'], ": ", name
+    
+
+
 def sign_detection(points):
-    #the same as for the face detection
-    global detect_sign_true, det_signs, sign_detected, det_entry_sign, signs_count, det, sign_detected_again
+    global det, detected_signs
 
     for newPoint in points.markers:
         position = newPoint.pose.position
-        stamp = str(newPoint.header.stamp.secs)+"."+str(newPoint.header.stamp.nsecs)
         xp = round(position.x, 2)
         yp = round(position.y, 2)
         zp = round(position.z, 2)
@@ -209,109 +196,66 @@ def sign_detection(points):
                     min_point = det[key]
                 else:
                     min_point = "not"
-                    if sign_detected_again == 0 and det[key]['name'] != None:
-                        sign_detected_again = 1     
-                        # we already have that point detected, lets count if it's really that point
-                        print "we already have that sign, but we see it again!: ", det[key]['name']
-                        name = det[key]['name']
-                        if name == 'honk':
-                            #honk_pub.publish("true")
-                            speak_robot("Beeeeeeeeeeeeeeeeeeeeep! Bip bip!")
-                        elif name =='stop':
-                            stop_pub.publish("true")
-                        elif name =='limit':   
-                            slow_pub.publish("true")  
-                        elif name =='oneway':  
-                            oneway_pub.publish(det_entry_sign['marker'].pose)   #this is probably wrong -> not necessarily the same frame?
-
 
         if min_point == None:
-            detect_sign_true = 0     #when we detect new sign, we dont want recognizer to work immediately, but wait for this to become 1 (which means: sign detected!!)
-            stamp_list = [{stamp:None}]
-            det[str(xp) + ";" + str(yp) + ";" + str(zp)] = {'count': 1, 'count_recognition': 0, 'detected': False, 'name': None, 'marker': None, 'face': False, 'point': str(xp) + ";" + str(yp) + ";" + str(zp), 'stamps': stamp_list}
+            d = dict()
+            det[str(xp) + ";" + str(yp) + ";" + str(zp)] = {'count': 1, 'max_recognition': 0, 'detected': False, 'name': None, 'name_dict': d, 'marker': None, 'face': False, 'point': str(xp) + ";" + str(yp) + ";" + str(zp)}
         elif min_point != "not":
             min_point['count'] += 1
-            min_point['stamps'].append({stamp:None})
-            if min_point['count'] > 30:
+            if min_point['count'] > 10:
                 min_point['detected'] = True
                 min_point['marker'] = newPoint      #we save the last marker
-                sign_detected += 1
-                print "sign" + str(detected) + " detected!!!!\n"
+                print "Sign " + str(detected_signs) + " detected!!!!\n", min_point['point']
+                detected_signs += 1
                 #print det
-                
-                #so we detected a new sign - let's reset the counters and ask recognizer what he sees
-                detect_sign_true = 1     #we are indeed looking at the face - let's allow recognizer to start counting!
-                det_entry_sign = min_point       # global variable, will save name of the person to it once the point is recognized
-                
         else:
             pass
 
 
+
 def recognized_sign(data):
-    global signs_count, detect_sign_true, det_entry_sign, sign_detected_again, honk_pub, stop_pub, slow_pub, oneway_pub, sign_pose, max_sign_count, max_sign_name, thresh_sign_count
-
-    name = data.data
-    #print name
-    sign_stamp, name = name.split(";")
-    #print "sign stamp, name", sign_stamp, name
+    global det, stop_pub, slow_pub, oneway_pub
     
-    thresh = 7
-
+    thresh = 15
+    rec = data.data
+    #print rec
+    
+    x, y, z, name = rec.split(';')
+    xp = round(float(x), 2)
+    yp = round(float(y), 2)
+    zp = round(float(z), 2)
+    mind = 0.5
     for key in det:
-        if det[key]['face'] == False and det[key]['name'] == None:
-            #print "its a sign!"
-            for i in det[key]['stamps']:
-                for key1 in i:
-                    print "key1 and sign stamp: ", key1, sign_stamp
-                    if key1 == sign_stamp:
-                        i[key1] = name
-                        det[key]['count_recognition'] += 1
-                        print "We found the same stamp, adding name! Count: ", det[key]['count_recognition'] 
-
-            # we chack if all detections are recognized
-            thresh_sign_count = 0
-            for ob in det[key]['stamps']:
-                for key3 in ob:
-                    if ob[key3] != None:
-                        thresh_sign_count += 1
-                        #print "count: ", thresh_sign_count, key
-
-            if det[key]['count_recognition'] >= thresh:
-                print "Enough signs recognized, start with counting."          
-                for i in det[key]['stamps']:
-                    for key2 in i:
-                        name = i[key2]
-                        print "name", name
-                        # we count
-                        if name in signs_count:
-                            signs_count[name]['count'] += 1
-                            #print signs_count[name]['name']+": "+str(signs_count[name]['count'])
-                            if signs_count[name]['count'] > max_sign_count:
-                                max_sign_count = signs_count[name]['count']
-                                max_sign_name = name
-
-                        elif name != None:
-                            signs_count[name] = {'count': 1, 'face': False, 'name': name}
-
+        (x, y, z) = key.split(';')
+        dist_x = abs(xp - float(x))
+        dist_y = abs(yp - float(y))
+        dist_z = abs(zp - float(z))
+        if dist_x <= mind and dist_y <= mind and dist_z <= mind:
+            #so we have a recognition that maches given position of a detection -> let's store the recognized sign
+            det[key]['name_dict'][name] = det[key]['name_dict'].get(name, 1) + 1    #we increase a count, or if the key doesn't exist yet, get() allows us to set default value
+            #print name, "count:", det[key]['name_dict'][name]
+            
+            if det[key]['name_dict'][name] > det[key]['max_recognition']:     #we check if current name count is bigger than max count of all names
+                det[key]['max_recognition'] = det[key]['name_dict'][name]
+            
+            if det[key]['name_dict'][name] > thresh and det[key]['name'] == None :    #if we dont want the recognized name to be changed once set, add to IF: and det[key]['name'] == None 
+                #if count of a recognized name is now bigger than threshold, and is also the same as "max_recognition", which means its a max of all names, we save the name
+                det[key]['name'] = name
+                print "Adding name to the sign detection ", det[key]['point'], ": ", name
                 
-                det[key]['name'] = max_sign_name
-                print "adding name to the dictionary!: ", det[key]['name'], det[key]['point']
-                
-                # we publish to the appropriate topic
-
-                if max_sign_name == 'honk':
+                # we publish to the appropriate topic ->> TO-DO: this should get moved!!
+                if name == 'honk':
                     #honk_pub.publish("true")
                     speak_robot("Beeeeeeeeeeeeeeeeeeeeep! Bip bip!")
-                elif max_sign_name =='stop':
+                elif name =='stop':
                     stop_pub.publish("true")
-                elif max_sign_name =='limit':   
+                elif name =='limit':   
                     slow_pub.publish("true")  
-                elif max_sign_name =='oneway':  
+                elif name =='oneway':  
                     oneway_pub.publish(det_entry_sign['marker'].pose)
-
-                for key4 in signs_count:            #reset to zero
-                        signs_count[key4]['count'] = 0
     
+
+
 def voice_action(data):
     global search_name, colour_street, street_pub, sent_street, status, cancel_pub, det
 
@@ -390,7 +334,7 @@ def publish_faces(non):
     marker = Marker()
 
     for key in det:
-        if det[key]['name'] == None:
+        if det[key]['name'] == None or det[key]['detected'] == False:
             continue
 
         name = det[key]['name']
@@ -430,10 +374,7 @@ def publish_faces(non):
 	                
                 goto_pub.publish(send_pose)
                 
-                
 
-        
-        
     markers_pub.publish(markers)
     
     if sent_street == 0 and colour_street != None and status == 0:
