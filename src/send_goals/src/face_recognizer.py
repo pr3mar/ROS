@@ -108,12 +108,13 @@ def speak_robot(str_speech):
 
 
 def recognized_face(data):
-    global markers_pub, detect_true, color, det_entry, faces_count, face_marker, search_name, status, cancel_pub, voice_pub, alib, max_face_name, max_face_count
-
-    name = data.data
+    global det, search_name, status, cancel_pub, alib
     
-    #print name
-
+    thresh = 10
+    thresh_reached = False
+    rec = data.data
+    #print rec
+    
     #when we have the position, but looking for the rotation
     #if status == 2 and search_name == name:
     #   goal = GoalID()
@@ -122,27 +123,30 @@ def recognized_face(data):
     #    speak_robot(search_name + ", where would you like to go?")
     #    status = 3
     
-    thresh = 5
-    thresh_reached = False
+    x, y, z, name = rec.split(';')
+    xp = round(float(x), 2)
+    yp = round(float(y), 2)
+    zp = round(float(z), 2)
+    mind = 0.5
+    for key in det:
+        (x, y, z) = key.split(';')
+        dist_x = abs(xp - float(x))
+        dist_y = abs(yp - float(y))
+        dist_z = abs(zp - float(z))
+        if dist_x <= mind and dist_y <= mind and dist_z <= mind:
+            #so we have a recognition that maches given position of a detection -> let's store the recognized name
+            det[key]['name_dict'][name] = det[key]['name_dict'].get(name, 1) + 1    #we increase a count, or if the key doesn't exist yet, get() allows us to set default value
+            print name, "count:", det[key]['name_dict'][name]
+            if det[key]['name_dict'][name] > det[key]['max_recognition']:     #we check if it's bigger than current max
+                det[key]['max_recognition'] = det[key]['name_dict'][name]
+            if det[key]['name_dict'][name] > thresh and det[key]['name_dict'][name] == det[key]['max_recognition'] and det[key]['name'] != name :    #if we dont want the recognized name to be changed once set, add to IF: and det[key]['name'] == None 
+                #if count of a recognized name is now bigger than threshold, and is also the same as "max_recognition", which means its a max of all names, we save the name
+                det[key]['name'] = name
+                print "Adding name to the detection ", det[key]['point'], ": ", name
     
-    if name in faces_count:
-        faces_count[name]['count'] += 1
-        print faces_count[name]['name']+": "+str(faces_count[name]['count'])
-
-        if faces_count[name]['count'] > max_face_count:
-            max_face_count = faces_count[name]['count']
-            max_face_name = name
-
-        if max_face_count > thresh and detect_true == 1 and det_entry['name'] == None:
-            det_entry['name'] = max_face_name
-            print "adding name to the dictionary!: ", det_entry['name'], det_entry['point']
-            # find the closest node in graph
-    else:
-        faces_count[name] = {'count': 1, 'face': False, 'name': name}
-
 
 def detection_thresh(points):
-    global det, detected, detect_true, det_entry, faces_count, detect_again, max_face_name, max_face_count
+    global det
 
     for newPoint in points.markers:
         position = newPoint.pose.position
@@ -166,28 +170,16 @@ def detection_thresh(points):
                     min_point = "not"
 
         if min_point == None:
-            max_face_name = None
-            max_face_count = 0                  #reset max counter
-            print "Resetting faces count!"
-            for key1 in faces_count:            #reset to zero before recognizer starts counting votes for new point in det
-                faces_count[key1]['count'] = 0
-
-            detect_true = 0     #when we detect new face, we dont want recognizer to work immediately, but wait for this to become 1 (which means: face detected!!)
-            det[str(xp) + ";" + str(yp) + ";" + str(zp)] = {'count': 1, 'count_recognition': 0, 'detected': False, 'name': None, 'marker': None, 'face': True, 'point': str(xp) + ";" + str(yp) + ";" + str(zp)}
+            d = dict()
+            det[str(xp) + ";" + str(yp) + ";" + str(zp)] = {'count': 1, 'max_recognition': 0, 'detected': False, 'name': None, 'name_dict': d, 'marker': None, 'face': True, 'point': str(xp) + ";" + str(yp) + ";" + str(zp)}
         elif min_point != "not":
             min_point['count'] += 1
             if min_point['count'] > 10:
                 min_point['detected'] = True
                 min_point['marker'] = newPoint      #we save the last marker
-                detected += 1
-                print "face " + str(detected) + " detected!!!!\n"
+                print "face " + str(detected) + " detected!!!!\n", min_point['point']
                 #print det
-
-                #so we detected a new face - let's reset the counters and ask recognizer what he sees (CHANGED -> now we reset when we add new point to 'det')
-                detect_true = 1     #we are indeed looking at the face - let's allow recognizer to start counting!
-                det_entry = min_point       # global variable, will save name of the person to it once the point is recognized
                 
-
         else:
             pass
 
@@ -499,8 +491,8 @@ def face_recognizer():
     oneway_pub = rospy.Publisher('/sign/oneway', Pose, queue_size=100)
     voice_pub = rospy.Publisher('/robotsound', SoundRequest, queue_size=100)
     rospy.Subscriber('/transformedMarkers/faces', MarkerArray, detection_thresh)
-    rospy.Subscriber('/transformedMarkers/signs', MarkerArray, sign_detection)
-    rospy.Subscriber('/recognizer/signs', String, recognized_sign)
+    #rospy.Subscriber('/transformedMarkers/signs', MarkerArray, sign_detection)
+    #rospy.Subscriber('/recognizer/signs', String, recognized_sign)
     rospy.Subscriber('/recognizer/face', String, recognized_face)
     rospy.Subscriber('/tf', tf.msg.tfMessage, publish_faces)
     rospy.Subscriber('/command', String, voice_action)
