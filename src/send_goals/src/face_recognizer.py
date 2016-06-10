@@ -110,7 +110,7 @@ def speak_robot(str_speech):
 def recognized_face(data):
     global det, search_name, status, cancel_pub, alib
     
-    thresh = 10
+    thresh = 15
     thresh_reached = False
     rec = data.data
     #print rec
@@ -136,7 +136,7 @@ def recognized_face(data):
         if dist_x <= mind and dist_y <= mind and dist_z <= mind:
             #so we have a recognition that maches given position of a detection -> let's store the recognized name
             det[key]['name_dict'][name] = det[key]['name_dict'].get(name, 1) + 1    #we increase a count, or if the key doesn't exist yet, get() allows us to set default value
-            print name, "count:", det[key]['name_dict'][name]
+            #print name, "count:", det[key]['name_dict'][name]
             if det[key]['name_dict'][name] > det[key]['max_recognition']:     #we check if it's bigger than current max
                 det[key]['max_recognition'] = det[key]['name_dict'][name]
             if det[key]['name_dict'][name] > thresh and det[key]['name_dict'][name] == det[key]['max_recognition'] and det[key]['name'] != name :    #if we dont want the recognized name to be changed once set, add to IF: and det[key]['name'] == None 
@@ -145,7 +145,7 @@ def recognized_face(data):
                 print "Adding name to the detection ", det[key]['point'], ": ", name
     
 
-def detection_thresh(points):
+def face_detection(points):
     global det
 
     for newPoint in points.markers:
@@ -490,8 +490,8 @@ def face_recognizer():
     honk_pub = rospy.Publisher('/sign/honk', String, queue_size=100)
     oneway_pub = rospy.Publisher('/sign/oneway', Pose, queue_size=100)
     voice_pub = rospy.Publisher('/robotsound', SoundRequest, queue_size=100)
-    rospy.Subscriber('/transformedMarkers/faces', MarkerArray, detection_thresh)
-    #rospy.Subscriber('/transformedMarkers/signs', MarkerArray, sign_detection)
+    rospy.Subscriber('/transformedMarkers/faces', MarkerArray, face_detection)
+    rospy.Subscriber('/transformedMarkers/signs', MarkerArray, sign_detection)
     #rospy.Subscriber('/recognizer/signs', String, recognized_sign)
     rospy.Subscriber('/recognizer/face', String, recognized_face)
     rospy.Subscriber('/tf', tf.msg.tfMessage, publish_faces)
