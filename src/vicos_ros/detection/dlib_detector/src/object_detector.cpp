@@ -31,6 +31,8 @@
 #include <time.h>
 #include <cmath>        // std::abs
 #include <tf/transform_listener.h>
+#include <image_geometry/pinhole_camera_model.h>
+#include <localizer/Localize.h>
 
 //#include "multiclass.h"
 
@@ -41,6 +43,18 @@ typedef scan_fhog_pyramid<pyramid_down<6> > image_scanner_type;
 object_detector<image_scanner_type> object_detector_function;
 ros::Publisher pub;
 unsigned long message_counter = 0;
+
+//added
+tf::TransformListener listener_tf;
+localizer::Localize localization;
+ros::Subscriber sub;
+std::vector<sensor_msgs::CameraInfo> camera_infos;
+
+void camera_callback(sensor_msgs::CameraInfo data) {
+    camera_infos.push_back(data);
+    if(camera_infos.size() > 50)
+        camera_infos.erase(camera_infos.begin());
+}
 
 void detectCallback(const sensor_msgs::ImageConstPtr& cam_msg){
 	cv_bridge::CvImagePtr cv_ptr;
@@ -78,35 +92,45 @@ void detectCallback(const sensor_msgs::ImageConstPtr& cam_msg){
         msg.source = "dlib";
 
         //adding location
-        std::double u = msg.x + msg.width / 2;
-        std::double v = msg.y + msg.height / 2;
+        ROS_INFO("Adding location!");
+        double u = msg.x + msg.width / 2;
+        double v = msg.y + msg.height / 2;
         
         sensor_msgs::CameraInfo camera_info;
+        int st = 0;
         std::time_t best_time = 1;
-        for(j = 0; j < camera_infos.size(); j++) {
+        for(int j = 0; j < camera_infos.size(); j++) {
             ROS_INFO("camera info loop");
-            std::time_t time = abs(j.header.stamp.toSec() - msg.header.stamp.toSec());
+            std::time_t time = abs(camera_infos.at(j).header.stamp.toSec() - msg.header.stamp.toSec());
             if (time < best_time) {
                 ROS_INFO("Setting camera_info!");
-                camera_info = j;
+                camera_info = camera_infos.at(j);
+                st = 1;
                 best_time = time;
                 break;
             }    
         }        
-                
-        if (!camera_info) {
+             
+        if (st == 0) {
             msg.label = "napaka!";
         }
+        
         else {
         	image_geometry::PinholeCameraModel camera_model = image_geometry::PinholeCameraModel();
             camera_model.fromCameraInfo(camera_info);
             
-            geometry_msgs::Point point = geometry_msgs::Point(((u - camera_model.cx()) - camera_model.Tx()) / camera_model.fx(), ((v - camera_model.cy()) - camera_model.Ty()) / camera_model.fy(), 1);
+            geometry_msgs::Point point;
+            point.x = ((u - camera_model.cx()) - camera_model.Tx()) / camera_model.fx();
+            point.y =  ((v - camera_model.cy()) - camera_model.Ty()) / camera_model.fy();
+            point.z = 1;
             
-            localization = localizer::Localize(msg.header, point, 3);
             //localizer::Localize localization = localizer::Localize(msg.header, point, self.region_scope);
+            //localization.header = msg.header;
+            //localization.point = point;
+            //localization.scope = 3;
             
-            if (!localization) {
+            /*
+            if (! localization) {
                 msg.label = "napaka localization!";
             }
             else {
@@ -115,8 +139,8 @@ void detectCallback(const sensor_msgs::ImageConstPtr& cam_msg){
                 tmpPose.header = msg.header;
                 tmpPose.pose = localization.pose;
                 try {
-                    self.listener.waitForTransform(msg.header.frame_id, '/map', msg.header.stamp, ros::Duration(4.5))
-                    ret = self.listener.transformPose('/map', tmpPose)
+                    self.listener.waitForTransform(msg.header.frame_id, "/map", msg.header.stamp, ros::Duration(4.5))
+                    ret = self.listener.transformPose("/map", tmpPose)
                 }
                 catch(int e) {
                     continue;
@@ -126,9 +150,9 @@ void detectCallback(const sensor_msgs::ImageConstPtr& cam_msg){
               
                 msg.label = to_string(localization.pose.position.x)+";"+to_string(localization.pose.position.y)+";"+to_string(localization.pose.position.z);
             }    
-
+            */
         }
-
+        
         cvi.toImageMsg(msg.image);
 		pub.publish(msg);
 	}
@@ -141,14 +165,17 @@ int main(int argc, char** argv) {
 
     //added
     //self.region_scope = rospy.get_param('~region', 3)
-    ros::service::waitForService("localizer");
-    tf::TransformListener listener = tf::TransformListener();
-    localizer::Localize localization = ros::ServiceProxy('localizer/localize', Localize)
-    ros::Subscriber sub = nh.subscribe ("/camera/rgb/camera_info", 1, camera_callback);
+    ros::service::waitForService("localizer/localize");
+    //listener_tf = tf::TransformListener();
+    //localization = ros::ServiceProxy("localizer/localize", Localize)
+    
 
 	ros::init (argc, argv, "object_detector");
 	ros::NodeHandle nh;
 	ros::NodeHandle nhp("~");
+	
+	//added
+	sub = nh.subscribe ("/camera/rgb/camera_info", 1, camera_callback);
 
 	ros::Subscriber sub = nh.subscribe ("camera", 1, detectCallback);
 
